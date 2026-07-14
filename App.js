@@ -360,7 +360,6 @@ export default function App() {
   );
 
   const selectedThread = selectedMessage ? threads[selectedMessage.id] ?? [] : [];
-
   const filteredJobs = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -513,6 +512,52 @@ export default function App() {
     setActiveTab('offers');
   }
 
+  function requestProvider(provider) {
+    const job = selectedJob;
+    const existing = messages.find(
+      (message) => !message.offerId && message.participant === provider.name && message.jobId === job?.id
+    );
+    const text = job
+      ? `Hi ${provider.name}, are you available for "${job.title}" in ${job.location}?`
+      : `Hi ${provider.name}, I would like to discuss a local service booking.`;
+
+    if (existing) {
+      setSelectedMessageId(existing.id);
+      setThreads((current) => ({
+        ...current,
+        [existing.id]: [...(current[existing.id] ?? []), { id: makeId(), from: 'customer', text }],
+      }));
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === existing.id ? { ...message, preview: text, time: 'Now', unread: 0 } : message
+        )
+      );
+      setActiveTab('messages');
+      return;
+    }
+
+    const conversationId = makeId();
+    setMessages((current) => [
+      {
+        id: conversationId,
+        participant: provider.name,
+        jobId: job?.id ?? null,
+        offerId: null,
+        preview: text,
+        time: 'Now',
+        unread: 0,
+      },
+      ...current,
+    ]);
+    setThreads((current) => ({
+      ...current,
+      [conversationId]: [{ id: makeId(), from: 'customer', text }],
+    }));
+    setSelectedMessageId(conversationId);
+    addAlert('Provider contacted', `${provider.name} received your message.`, 'Sent');
+    setActiveTab('messages');
+  }
+
   function acceptOffer(offer) {
     const provider = providers.find((item) => item.id === offer.providerId);
     const job = jobs.find((item) => item.id === offer.jobId);
@@ -545,6 +590,18 @@ export default function App() {
     );
     addAlert('Offer declined', `${provider?.name ?? 'Provider'} was notified that the offer was declined.`, 'Closed');
     ensureConversation(offer, 'customer', 'Thanks for the offer. I will pass on this one.');
+  }
+
+  function openOfferConversation(offer) {
+    const existing = messages.find((message) => message.offerId === offer.id);
+
+    if (existing) {
+      openMessage(existing.id);
+      setActiveTab('messages');
+      return;
+    }
+
+    ensureConversation(offer, 'system', 'Conversation opened for this offer.');
   }
 
   function completeJob(jobId) {
@@ -665,8 +722,10 @@ export default function App() {
               compact={compact}
               jobs={filteredJobs}
               mode={mode}
+              offers={offers}
               offerDrafts={offerDrafts}
               providers={providers}
+              requestProvider={requestProvider}
               searchTerm={searchTerm}
               selectedCategory={selectedCategory}
               selectedJob={selectedJob}
@@ -692,6 +751,7 @@ export default function App() {
               declineOffer={declineOffer}
               jobs={jobs}
               offers={offers}
+              openOfferConversation={openOfferConversation}
               providers={providers}
               setActiveTab={setActiveTab}
             />
@@ -699,7 +759,10 @@ export default function App() {
           {activeTab === 'messages' && (
             <MessagesScreen
               chatDraft={chatDraft}
+              acceptOffer={acceptOffer}
+              declineOffer={declineOffer}
               jobs={jobs}
+              offers={offers}
               messages={messages}
               openMessage={openMessage}
               selectedMessage={selectedMessage}
@@ -751,8 +814,10 @@ function MarketScreen({
   compact,
   jobs,
   mode,
+  offers,
   offerDrafts,
   providers,
+  requestProvider,
   searchTerm,
   selectedCategory,
   selectedJob,
@@ -822,6 +887,29 @@ function MarketScreen({
         </Pressable>
       </View>
 
+      {selectedJob && (
+        <View style={styles.selectedPanel}>
+          <View style={styles.selectedPanelTop}>
+            <View style={styles.selectedPanelCopy}>
+              <Text style={styles.selectedPanelLabel}>Selected job</Text>
+              <Text style={styles.selectedPanelTitle}>{selectedJob.title}</Text>
+              <Text style={styles.selectedPanelMeta}>
+                {selectedJob.location} - {formatMoney(selectedJob.budget)}
+              </Text>
+            </View>
+            <StatusPill status={selectedJob.status} />
+          </View>
+          <View style={styles.selectedPanelActions}>
+            <Pressable style={styles.secondaryAction} onPress={() => setActiveTab('offers')}>
+              <Text style={styles.secondaryActionText}>Review offers</Text>
+            </Pressable>
+            <Pressable style={styles.primaryAction} onPress={() => requestProvider(providers[0])}>
+              <Text style={styles.primaryActionText}>Message provider</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
       <View style={styles.stack}>
         {jobs.length > 0 ? (
           jobs.map((job) => (
@@ -832,7 +920,12 @@ function MarketScreen({
               job={job}
               mode={mode}
               selected={selectedJob?.id === job.id}
-              onPress={() => setSelectedJobId(job.id)}
+              offersCount={offers.filter((offer) => offer.jobId === job.id).length}
+              onSelect={() => setSelectedJobId(job.id)}
+              openOffers={() => {
+                setSelectedJobId(job.id);
+                setActiveTab('offers');
+              }}
               sendOffer={() => sendOffer(job)}
               updateDraft={(field, value) => updateOfferDraft(job.id, field, value)}
             />
@@ -849,11 +942,18 @@ function MarketScreen({
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Verified providers</Text>
-        <Text style={styles.sectionLink}>Invite</Text>
+        <Pressable style={styles.textAction} onPress={() => setActiveTab('post')}>
+          <Text style={styles.textActionLabel}>New request</Text>
+        </Pressable>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.providerRail}>
         {providers.map((provider) => (
-          <ProviderCard key={provider.id} provider={provider} />
+          <ProviderCard
+            key={provider.id}
+            provider={provider}
+            requestProvider={() => requestProvider(provider)}
+            viewCategory={() => setSelectedCategory(categoryId(provider.category))}
+          />
         ))}
       </ScrollView>
     </ScrollView>
@@ -879,11 +979,22 @@ function CategoryPill({ active, count, label, onPress, tone }) {
   );
 }
 
-function JobCard({ compact, draft, job, mode, onPress, selected, sendOffer, updateDraft }) {
+function JobCard({
+  compact,
+  draft,
+  job,
+  mode,
+  offersCount,
+  onSelect,
+  openOffers,
+  selected,
+  sendOffer,
+  updateDraft,
+}) {
   const booked = job.status !== 'Open';
 
   return (
-    <Pressable style={[styles.jobCard, selected && styles.jobCardSelected]} onPress={onPress}>
+    <View style={[styles.jobCard, selected && styles.jobCardSelected]}>
       <View style={styles.jobTop}>
         <View style={styles.jobTitleWrap}>
           <View style={styles.inlineMeta}>
@@ -905,6 +1016,15 @@ function JobCard({ compact, draft, job, mode, onPress, selected, sendOffer, upda
         <Detail label="When" value={job.schedule} />
         <Detail label="Where" value={job.location} />
         <Detail label="Distance" value={job.distance} />
+      </View>
+
+      <View style={styles.jobActions}>
+        <Pressable style={styles.secondaryAction} onPress={onSelect}>
+          <Text style={styles.secondaryActionText}>{selected ? 'Selected' : 'View job'}</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryAction} onPress={openOffers}>
+          <Text style={styles.secondaryActionText}>{offersCount > 0 ? `${offersCount} offers` : 'Offers'}</Text>
+        </Pressable>
       </View>
 
       {mode === 'Provider' && !booked && (
@@ -939,7 +1059,7 @@ function JobCard({ compact, draft, job, mode, onPress, selected, sendOffer, upda
           </Pressable>
         </View>
       )}
-    </Pressable>
+    </View>
   );
 }
 
@@ -960,9 +1080,9 @@ function StatusPill({ status }) {
   );
 }
 
-function ProviderCard({ provider }) {
+function ProviderCard({ provider, requestProvider, viewCategory }) {
   return (
-    <Pressable style={styles.providerCard}>
+    <View style={styles.providerCard}>
       <View style={[styles.providerAvatar, { backgroundColor: provider.tone }]}>
         <Text style={styles.providerInitials}>{provider.initials}</Text>
       </View>
@@ -976,7 +1096,15 @@ function ProviderCard({ provider }) {
         <Text style={styles.providerStat}>{provider.completed} jobs</Text>
       </View>
       <Text style={styles.providerResponse}>From {formatMoney(provider.hourly)}/hr. Replies in {provider.response}</Text>
-    </Pressable>
+      <View style={styles.providerActions}>
+        <Pressable style={styles.providerAction} onPress={viewCategory}>
+          <Text style={styles.providerActionText}>View jobs</Text>
+        </Pressable>
+        <Pressable style={styles.providerPrimaryAction} onPress={requestProvider}>
+          <Text style={styles.providerPrimaryActionText}>Message</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -1059,7 +1187,15 @@ function LabeledInput({ keyboardType, label, multiline, onChangeText, placeholde
   );
 }
 
-function OffersScreen({ acceptOffer, declineOffer, jobs, offers, providers, setActiveTab }) {
+function OffersScreen({
+  acceptOffer,
+  declineOffer,
+  jobs,
+  offers,
+  openOfferConversation,
+  providers,
+  setActiveTab,
+}) {
   const sortedOffers = [...offers].sort((a, b) => {
     if (a.status === b.status) {
       return b.id - a.id;
@@ -1096,6 +1232,9 @@ function OffersScreen({ acceptOffer, declineOffer, jobs, offers, providers, setA
                 </View>
                 {pending ? (
                   <View style={styles.offerActions}>
+                    <Pressable style={styles.messageOfferAction} onPress={() => openOfferConversation(offer)}>
+                      <Text style={styles.messageOfferActionText}>Message</Text>
+                    </Pressable>
                     <Pressable style={styles.declineAction} onPress={() => declineOffer(offer)}>
                       <Text style={styles.declineActionText}>Decline</Text>
                     </Pressable>
@@ -1104,7 +1243,7 @@ function OffersScreen({ acceptOffer, declineOffer, jobs, offers, providers, setA
                     </Pressable>
                   </View>
                 ) : (
-                  <Pressable style={styles.secondaryWideAction} onPress={() => setActiveTab('messages')}>
+                  <Pressable style={styles.secondaryWideAction} onPress={() => openOfferConversation(offer)}>
                     <Text style={styles.secondaryWideActionText}>Open conversation</Text>
                   </Pressable>
                 )}
@@ -1125,16 +1264,20 @@ function OffersScreen({ acceptOffer, declineOffer, jobs, offers, providers, setA
 }
 
 function MessagesScreen({
+  acceptOffer,
   chatDraft,
+  declineOffer,
   jobs,
   messages,
   openMessage,
+  offers,
   selectedMessage,
   selectedThread,
   sendMessage,
   setChatDraft,
 }) {
   const selectedJob = jobs.find((job) => job.id === selectedMessage?.jobId);
+  const selectedOffer = offers.find((offer) => offer.id === selectedMessage?.offerId);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -1170,6 +1313,25 @@ function MessagesScreen({
       <View style={styles.chatPanel}>
         <Text style={styles.chatTitle}>{selectedMessage?.participant ?? 'Conversation'}</Text>
         <Text style={styles.chatSubtitle}>{selectedJob?.title ?? 'Select a conversation'}</Text>
+        {selectedOffer && (
+          <View style={styles.chatOfferPanel}>
+            <View>
+              <Text style={styles.chatOfferAmount}>{formatMoney(selectedOffer.amount)}</Text>
+              <Text style={styles.chatOfferMeta}>Arrival: {selectedOffer.eta}</Text>
+            </View>
+            <StatusPill status={selectedOffer.status} />
+          </View>
+        )}
+        {selectedOffer?.status === 'Pending' && (
+          <View style={styles.chatOfferActions}>
+            <Pressable style={styles.declineAction} onPress={() => declineOffer(selectedOffer)}>
+              <Text style={styles.declineActionText}>Decline</Text>
+            </Pressable>
+            <Pressable style={styles.acceptAction} onPress={() => acceptOffer(selectedOffer)}>
+              <Text style={styles.acceptActionText}>Accept</Text>
+            </Pressable>
+          </View>
+        )}
         {selectedThread.map((message) => {
           const outgoing = message.from === 'customer';
           const system = message.from === 'system';
@@ -1578,6 +1740,45 @@ const styles = StyleSheet.create({
   stack: {
     gap: 12,
   },
+  selectedPanel: {
+    borderRadius: 8,
+    padding: 14,
+    gap: 12,
+    backgroundColor: '#F9FFE8',
+    borderWidth: 1,
+    borderColor: COLORS.primaryDark,
+  },
+  selectedPanelTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  selectedPanelCopy: {
+    flex: 1,
+  },
+  selectedPanelLabel: {
+    color: COLORS.primaryDark,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  selectedPanelTitle: {
+    marginTop: 4,
+    color: COLORS.ink,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '900',
+  },
+  selectedPanelMeta: {
+    marginTop: 4,
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  selectedPanelActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   jobCard: {
     borderRadius: 8,
     padding: 15,
@@ -1667,6 +1868,25 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     marginTop: 3,
+    color: COLORS.ink,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  jobActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  secondaryAction: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  secondaryActionText: {
     color: COLORS.ink,
     fontSize: 13,
     fontWeight: '900',
@@ -1806,6 +2026,39 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: '900',
   },
+  providerActions: {
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  providerAction: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  providerActionText: {
+    color: COLORS.ink,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  providerPrimaryAction: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.ink,
+  },
+  providerPrimaryActionText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '900',
+  },
   screenTitle: {
     color: COLORS.ink,
     fontSize: 28,
@@ -1922,6 +2175,21 @@ const styles = StyleSheet.create({
   offerActions: {
     flexDirection: 'row',
     gap: 10,
+  },
+  messageOfferAction: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF5FF',
+    borderWidth: 1,
+    borderColor: '#C9DCFF',
+  },
+  messageOfferActionText: {
+    color: COLORS.blue,
+    fontSize: 13,
+    fontWeight: '900',
   },
   declineAction: {
     flex: 1,
@@ -2049,6 +2317,31 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontSize: 12,
     fontWeight: '800',
+  },
+  chatOfferPanel: {
+    minHeight: 66,
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    backgroundColor: COLORS.surface,
+  },
+  chatOfferAmount: {
+    color: COLORS.ink,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  chatOfferMeta: {
+    marginTop: 2,
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  chatOfferActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   bubble: {
     alignSelf: 'flex-start',
