@@ -1,0 +1,23 @@
+{
+  "name": "weejob",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "expo": "~57.0.4",
+    "expo-status-bar": "~57.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-web": "^0.21.2"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "export:android": "expo export --platform android",
+    "export:web": "expo export --platform web",
+    "check": "expo export --platform android --output-dir /tmp/weejob-check-android && expo export --platform web --output-dir /tmp/weejob-check-web"
+  },
+  "private": true
+}
