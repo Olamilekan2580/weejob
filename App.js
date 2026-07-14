@@ -16,317 +16,622 @@ import {
 
 const COLORS = {
   primary: '#B7F000',
-  primaryDark: '#5D7F00',
+  primaryDark: '#4D6A00',
   ink: '#172014',
-  muted: '#6A7464',
-  line: '#E1E8DB',
-  surface: '#F6FAF1',
+  muted: '#687465',
+  faint: '#EEF3E9',
+  line: '#DDE7D6',
+  surface: '#F7FAF4',
   white: '#FFFFFF',
-  amber: '#FFB84D',
-  blue: '#5AA7FF',
-  red: '#F66D6D',
-  teal: '#22B8A0',
+  blue: '#2563EB',
+  teal: '#0F9F8E',
+  amber: '#D97706',
+  red: '#D92D20',
+  navy: '#20304A',
 };
 
-const categories = [
-  { id: 'cleaning', label: 'Cleaning', count: 42, tone: COLORS.primary },
-  { id: 'repairs', label: 'Repairs', count: 31, tone: COLORS.amber },
-  { id: 'plumbing', label: 'Plumbing', count: 18, tone: COLORS.blue },
-  { id: 'errands', label: 'Errands', count: 27, tone: COLORS.teal },
-  { id: 'painting', label: 'Painting', count: 13, tone: COLORS.red },
-  { id: 'moving', label: 'Moving', count: 22, tone: '#C4A8FF' },
+const categoryPalette = {
+  Cleaning: COLORS.primary,
+  Plumbing: '#73C7FF',
+  Electrical: '#FFD166',
+  Handyman: '#FFB86B',
+  Gardening: '#63D471',
+  Moving: '#B9A7FF',
+  Painting: '#FF9CAD',
+  'Pet Care': '#88D8C0',
+};
+
+const initialCategories = [
+  { id: 'cleaning', label: 'Cleaning', count: 28, tone: categoryPalette.Cleaning },
+  { id: 'plumbing', label: 'Plumbing', count: 16, tone: categoryPalette.Plumbing },
+  { id: 'electrical', label: 'Electrical', count: 12, tone: categoryPalette.Electrical },
+  { id: 'handyman', label: 'Handyman', count: 21, tone: categoryPalette.Handyman },
+  { id: 'gardening', label: 'Gardening', count: 18, tone: categoryPalette.Gardening },
+  { id: 'moving', label: 'Moving', count: 9, tone: categoryPalette.Moving },
+  { id: 'painting', label: 'Painting', count: 14, tone: categoryPalette.Painting },
+  { id: 'pet-care', label: 'Pet Care', count: 7, tone: categoryPalette['Pet Care'] },
 ];
 
 const initialJobs = [
   {
-    id: 1,
-    title: 'Deep clean 2-bedroom flat',
+    id: 101,
+    title: 'Deep clean two-bedroom apartment',
     category: 'Cleaning',
-    location: 'Ikeja GRA',
-    distance: '1.4 km',
-    pay: 'NGN 18,000',
-    time: 'Today, 3:00 PM',
-    bids: 8,
+    location: 'Rathmines, Dublin',
+    distance: '2.4 km',
+    budget: 145,
+    schedule: 'Today, 16:00',
+    description: 'Full apartment clean after guests, including kitchen appliances and two bathrooms.',
+    customer: 'Sophie Walsh',
+    status: 'Open',
     urgent: true,
+    createdAt: '12 min ago',
+    acceptedOfferId: null,
   },
   {
-    id: 2,
-    title: 'Fix leaking kitchen sink',
+    id: 102,
+    title: 'Repair leaking bathroom tap',
     category: 'Plumbing',
-    location: 'Maryland',
-    distance: '2.1 km',
-    pay: 'NGN 12,500',
-    time: 'Tomorrow morning',
-    bids: 5,
+    location: 'Salthill, Galway',
+    distance: '3.1 km',
+    budget: 95,
+    schedule: 'Tomorrow morning',
+    description: 'Mixer tap keeps dripping. Please include call-out and parts estimate.',
+    customer: 'Declan Murphy',
+    status: 'Open',
     urgent: false,
+    createdAt: '34 min ago',
+    acceptedOfferId: null,
   },
   {
-    id: 3,
-    title: 'Paint small shop front',
-    category: 'Painting',
-    location: 'Ogba',
-    distance: '4.8 km',
-    pay: 'NGN 45,000',
-    time: 'This weekend',
-    bids: 11,
+    id: 103,
+    title: 'Assemble home office furniture',
+    category: 'Handyman',
+    location: 'Douglas, Cork',
+    distance: '5.8 km',
+    budget: 120,
+    schedule: 'Friday afternoon',
+    description: 'Desk, shelving unit and ergonomic chair need assembly in a new home office.',
+    customer: 'Aisling Byrne',
+    status: 'Open',
     urgent: false,
+    createdAt: '1h ago',
+    acceptedOfferId: null,
+  },
+  {
+    id: 104,
+    title: 'Garden tidy and hedge trim',
+    category: 'Gardening',
+    location: 'Blackrock, Dublin',
+    distance: '6.2 km',
+    budget: 180,
+    schedule: 'This weekend',
+    description: 'Small back garden needs mowing, hedge trimming, weeding and green waste removal.',
+    customer: 'Niamh O Connor',
+    status: 'Open',
+    urgent: false,
+    createdAt: '2h ago',
+    acceptedOfferId: null,
   },
 ];
 
-const providers = [
+const initialProviders = [
   {
-    id: 1,
-    name: 'Ada HomeCare',
-    skill: 'Cleaning specialist',
+    id: 201,
+    name: 'Emerald HomeCare',
+    category: 'Cleaning',
     rating: '4.9',
-    jobs: 126,
-    response: '8 min',
-    initials: 'AH',
+    reviews: 184,
+    completed: 312,
+    response: '9 min',
+    location: 'Dublin',
+    verified: true,
+    hourly: 38,
+    initials: 'EH',
     tone: COLORS.primary,
   },
   {
-    id: 2,
-    name: 'Tunde FixIt',
-    skill: 'Repairs and plumbing',
+    id: 202,
+    name: 'Liffey Plumbing Co.',
+    category: 'Plumbing',
     rating: '4.8',
-    jobs: 88,
+    reviews: 96,
+    completed: 147,
     response: '14 min',
-    initials: 'TF',
-    tone: COLORS.amber,
+    location: 'Dublin',
+    verified: true,
+    hourly: 65,
+    initials: 'LP',
+    tone: '#73C7FF',
   },
   {
-    id: 3,
-    name: 'Mara Movers',
-    skill: 'Moving and errands',
+    id: 203,
+    name: 'Cork Fix & Fit',
+    category: 'Handyman',
+    rating: '4.9',
+    reviews: 121,
+    completed: 204,
+    response: '18 min',
+    location: 'Cork',
+    verified: true,
+    hourly: 48,
+    initials: 'CF',
+    tone: '#FFB86B',
+  },
+  {
+    id: 204,
+    name: 'Green Mile Gardens',
+    category: 'Gardening',
     rating: '4.7',
-    jobs: 73,
-    response: '21 min',
-    initials: 'MM',
-    tone: COLORS.blue,
+    reviews: 88,
+    completed: 133,
+    response: '22 min',
+    location: 'Dublin',
+    verified: true,
+    hourly: 42,
+    initials: 'GG',
+    tone: '#63D471',
+  },
+];
+
+const initialOffers = [
+  {
+    id: 301,
+    jobId: 101,
+    providerId: 201,
+    amount: 135,
+    eta: 'Today, 15:45',
+    note: 'Two-person team, eco products included, insured and available today.',
+    status: 'Pending',
+    createdAt: '8 min ago',
+  },
+  {
+    id: 302,
+    jobId: 102,
+    providerId: 202,
+    amount: 110,
+    eta: 'Tomorrow, 09:30',
+    note: 'Call-out, seal replacement and pressure check included. Parts billed only if needed.',
+    status: 'Pending',
+    createdAt: '20 min ago',
   },
 ];
 
 const initialMessages = [
   {
-    id: 1,
-    name: 'Ada HomeCare',
-    preview: 'I can arrive by 3 PM with cleaning supplies.',
-    time: '2m',
-    unread: 2,
-  },
-  {
-    id: 2,
-    name: 'Tunde FixIt',
-    preview: 'Please send a photo of the sink area.',
-    time: '18m',
-    unread: 0,
-  },
-  {
-    id: 3,
-    name: 'Mara Movers',
-    preview: 'Two movers and a van are available Saturday.',
-    time: '1h',
+    id: 401,
+    participant: 'Emerald HomeCare',
+    jobId: 101,
+    offerId: 301,
+    preview: 'We can bring all cleaning products and arrive before 4.',
+    time: '8m',
     unread: 1,
   },
+  {
+    id: 402,
+    participant: 'Liffey Plumbing Co.',
+    jobId: 102,
+    offerId: 302,
+    preview: 'Please send a close photo of the tap if possible.',
+    time: '19m',
+    unread: 0,
+  },
 ];
+
+const initialThreads = {
+  401: [
+    {
+      id: 501,
+      from: 'provider',
+      text: 'We can bring all cleaning products and arrive before 4.',
+    },
+    {
+      id: 502,
+      from: 'customer',
+      text: 'That works. Please include the oven and fridge.',
+    },
+  ],
+  402: [
+    {
+      id: 503,
+      from: 'provider',
+      text: 'Please send a close photo of the tap if possible.',
+    },
+  ],
+};
 
 const initialAlerts = [
   {
-    id: 1,
-    title: 'New bid received',
-    body: 'Ada HomeCare bid NGN 17,500 for your cleaning request.',
+    id: 601,
+    title: 'Offer received',
+    body: 'Emerald HomeCare sent an offer for your Dublin cleaning job.',
     status: 'New',
   },
   {
-    id: 2,
-    title: 'Provider is nearby',
-    body: 'Tunde FixIt is 10 minutes away from your location.',
-    status: 'Live',
-  },
-  {
-    id: 3,
-    title: 'Payment reminder',
-    body: 'Release payment only after the job is marked complete.',
-    status: 'Safety',
+    id: 602,
+    title: 'Safety reminder',
+    body: 'Keep payment in-app and release it only when the job is completed.',
+    status: 'Trust',
   },
 ];
 
-const tabs = [
-  { id: 'home', label: 'Home', icon: 'H' },
-  { id: 'post', label: 'Post', icon: '+' },
-  { id: 'messages', label: 'Chat', icon: 'M' },
-  { id: 'alerts', label: 'Alerts', icon: '!' },
-  { id: 'profile', label: 'You', icon: 'U' },
-];
-
-const initialDraftJob = {
+const emptyJobDraft = {
   title: '',
   category: 'Cleaning',
   location: '',
   budget: '',
-  details: '',
+  schedule: '',
+  description: '',
 };
 
-const initialChatMessages = [
-  {
-    id: 1,
-    from: 'provider',
-    text: 'Can you confirm parking and water access?',
-  },
-  {
-    id: 2,
-    from: 'customer',
-    text: 'Yes, both are available. Please bring mop heads.',
-  },
+const emptyOfferDraft = {
+  amount: '',
+  eta: '',
+  note: '',
+};
+
+const tabs = [
+  { id: 'market', label: 'Market', icon: 'M' },
+  { id: 'post', label: 'Post', icon: '+' },
+  { id: 'offers', label: 'Offers', icon: 'O' },
+  { id: 'messages', label: 'Chat', icon: 'C' },
+  { id: 'profile', label: 'Profile', icon: 'P' },
 ];
 
 function makeId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
 
-function normalizeBudget(value) {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return '';
-  }
-  return trimmed.toUpperCase().startsWith('NGN') ? trimmed : `NGN ${trimmed}`;
+function formatMoney(value) {
+  return new Intl.NumberFormat('en-IE', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
 }
 
-function categoryIdFromLabel(label) {
-  const normalized = label.trim().toLowerCase();
-  return categories.find((category) => category.label.toLowerCase() === normalized)?.id;
+function parseAmount(value) {
+  const numeric = value.replace(/[^0-9.]/g, '');
+  return Number(numeric);
+}
+
+function categoryId(label) {
+  const clean = label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return clean || `category-${makeId()}`;
+}
+
+function showNotice(title, message) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    return;
+  }
+
+  Alert.alert(title, message);
+}
+
+function statusTone(status) {
+  if (status === 'Accepted' || status === 'Booked') {
+    return COLORS.blue;
+  }
+  if (status === 'Completed') {
+    return COLORS.teal;
+  }
+  if (status === 'Declined' || status === 'Cancelled') {
+    return COLORS.red;
+  }
+  return COLORS.amber;
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [selectedCategory, setSelectedCategory] = useState('cleaning');
-  const [serviceMode, setServiceMode] = useState('Hire');
+  const [activeTab, setActiveTab] = useState('market');
+  const [mode, setMode] = useState('Customer');
+  const [categories, setCategories] = useState(initialCategories);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [jobs, setJobs] = useState(initialJobs);
-  const [draftJob, setDraftJob] = useState(initialDraftJob);
+  const [providers] = useState(initialProviders);
+  const [offers, setOffers] = useState(initialOffers);
   const [messages, setMessages] = useState(initialMessages);
+  const [threads, setThreads] = useState(initialThreads);
   const [alerts, setAlerts] = useState(initialAlerts);
-  const [notificationPrefs, setNotificationPrefs] = useState({
-    'New bids': true,
-    'Provider arrival': true,
-    Promotions: false,
-  });
+  const [jobDraft, setJobDraft] = useState(emptyJobDraft);
+  const [offerDrafts, setOfferDrafts] = useState({});
+  const [selectedJobId, setSelectedJobId] = useState(initialJobs[0]?.id ?? null);
   const [selectedMessageId, setSelectedMessageId] = useState(initialMessages[0]?.id ?? null);
-  const [chatMessages, setChatMessages] = useState(initialChatMessages);
   const [chatDraft, setChatDraft] = useState('');
-  const [profileMode, setProfileMode] = useState('Customer');
-  const [serviceRadius, setServiceRadius] = useState(5);
+  const [serviceRadius, setServiceRadius] = useState(12);
+  const [instantBooking, setInstantBooking] = useState(true);
   const { width } = useWindowDimensions();
   const compact = width < 390;
 
-  const selectedCategoryLabel = useMemo(
-    () => categories.find((category) => category.id === selectedCategory)?.label ?? 'Cleaning',
-    [selectedCategory]
+  const selectedJob = useMemo(
+    () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
+    [jobs, selectedJobId]
   );
+
+  const selectedMessage = useMemo(
+    () => messages.find((message) => message.id === selectedMessageId) ?? messages[0] ?? null,
+    [messages, selectedMessageId]
+  );
+
+  const selectedThread = selectedMessage ? threads[selectedMessage.id] ?? [] : [];
 
   const filteredJobs = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
     return jobs.filter((job) => {
-      const categoryMatch = job.category === selectedCategoryLabel;
-      const searchMatch =
+      const categoryMatch = selectedCategory === 'all' || categoryId(job.category) === selectedCategory;
+      const queryMatch =
         !query ||
-        [job.title, job.category, job.location, job.pay, job.time]
+        [job.title, job.category, job.location, job.description, job.customer]
           .join(' ')
           .toLowerCase()
           .includes(query);
 
-      return categoryMatch && searchMatch;
+      return categoryMatch && queryMatch;
     });
-  }, [jobs, searchTerm, selectedCategoryLabel]);
+  }, [jobs, searchTerm, selectedCategory]);
 
-  const selectedMessage = useMemo(
-    () => messages.find((message) => message.id === selectedMessageId) ?? messages[0],
-    [messages, selectedMessageId]
-  );
+  const stats = useMemo(() => {
+    const openJobs = jobs.filter((job) => job.status === 'Open').length;
+    const pendingOffers = offers.filter((offer) => offer.status === 'Pending').length;
+    const bookedJobs = jobs.filter((job) => job.status === 'Booked').length;
 
-  function showNotice(title, message) {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n\n${message}`);
-      return;
-    }
+    return { openJobs, pendingOffers, bookedJobs };
+  }, [jobs, offers]);
 
-    Alert.alert(title, message);
+  function addAlert(title, body, status = 'New') {
+    setAlerts((current) => [{ id: makeId(), title, body, status }, ...current]);
   }
 
-  function updateDraftJob(field, value) {
-    setDraftJob((current) => ({ ...current, [field]: value }));
+  function updateJobDraft(field, value) {
+    setJobDraft((current) => ({ ...current, [field]: value }));
   }
 
-  function saveDraftJob() {
-    showNotice('Draft saved', 'Your job draft is kept in this session.');
+  function updateOfferDraft(jobId, field, value) {
+    setOfferDrafts((current) => ({
+      ...current,
+      [jobId]: {
+        ...(current[jobId] ?? emptyOfferDraft),
+        [field]: value,
+      },
+    }));
   }
 
   function publishJob() {
-    const title = draftJob.title.trim();
-    const category = draftJob.category.trim();
-    const location = draftJob.location.trim();
-    const budget = normalizeBudget(draftJob.budget);
+    const title = jobDraft.title.trim();
+    const category = jobDraft.category.trim();
+    const location = jobDraft.location.trim();
+    const budget = parseAmount(jobDraft.budget);
+    const schedule = jobDraft.schedule.trim();
+    const description = jobDraft.description.trim();
 
-    if (!title || !category || !location || !budget) {
-      showNotice('Missing details', 'Add a title, category, location and budget before publishing.');
+    if (!title || !category || !location || !budget || !schedule || !description) {
+      showNotice('Add the missing details', 'Title, category, location, budget, schedule and description are required.');
       return;
     }
 
-    const job = {
+    const newJob = {
       id: makeId(),
       title,
       category,
       location,
       distance: 'New',
-      pay: budget,
-      time: 'Open now',
-      bids: 0,
+      budget,
+      schedule,
+      description,
+      customer: 'Client Account',
+      status: 'Open',
       urgent: false,
+      createdAt: 'Just now',
+      acceptedOfferId: null,
     };
+    const id = categoryId(category);
 
-    setJobs((current) => [job, ...current]);
-    setAlerts((current) => [
+    setJobs((current) => [newJob, ...current]);
+    setCategories((current) => {
+      const existing = current.find((item) => item.id === id);
+
+      if (existing) {
+        return current.map((item) =>
+          item.id === id ? { ...item, count: item.count + 1 } : item
+        );
+      }
+
+      return [
+        ...current,
+        {
+          id,
+          label: category,
+          count: 1,
+          tone: categoryPalette[category] ?? COLORS.teal,
+        },
+      ];
+    });
+    setSelectedCategory(id);
+    setSelectedJobId(newJob.id);
+    setJobDraft(emptyJobDraft);
+    addAlert('Job published', `${title} is live for verified providers in ${location}.`, 'Live');
+    setActiveTab('market');
+  }
+
+  function sendOffer(job) {
+    const draft = offerDrafts[job.id] ?? emptyOfferDraft;
+    const amount = parseAmount(draft.amount);
+    const eta = draft.eta.trim();
+    const note = draft.note.trim();
+
+    if (!amount || !eta || !note) {
+      showNotice('Complete the offer', 'Add your price, arrival time and a short note before sending.');
+      return;
+    }
+
+    const provider = providers[0];
+    const offer = {
+      id: makeId(),
+      jobId: job.id,
+      providerId: provider.id,
+      amount,
+      eta,
+      note,
+      status: 'Pending',
+      createdAt: 'Just now',
+    };
+    const conversationId = makeId();
+
+    setOffers((current) => [offer, ...current]);
+    setMessages((current) => [
       {
-        id: makeId(),
-        title: 'Job published',
-        body: `${title} is now visible to nearby ${category.toLowerCase()} providers.`,
-        status: 'Live',
+        id: conversationId,
+        participant: provider.name,
+        jobId: job.id,
+        offerId: offer.id,
+        preview: note,
+        time: 'Now',
+        unread: 0,
       },
       ...current,
     ]);
-    setDraftJob(initialDraftJob);
-    setSelectedCategory(categoryIdFromLabel(category) ?? selectedCategory);
-    setActiveTab('home');
+    setThreads((current) => ({
+      ...current,
+      [conversationId]: [
+        {
+          id: makeId(),
+          from: 'provider',
+          text: `${formatMoney(amount)} offer: ${note}`,
+        },
+      ],
+    }));
+    setOfferDrafts((current) => ({ ...current, [job.id]: emptyOfferDraft }));
+    setSelectedMessageId(conversationId);
+    addAlert('Offer sent', `${provider.name} sent an offer for ${job.title}.`, 'Pending');
+    setActiveTab('offers');
   }
 
-  function selectMessage(id) {
-    setSelectedMessageId(id);
-    setMessages((current) =>
-      current.map((message) => (message.id === id ? { ...message, unread: 0 } : message))
+  function acceptOffer(offer) {
+    const provider = providers.find((item) => item.id === offer.providerId);
+    const job = jobs.find((item) => item.id === offer.jobId);
+
+    setOffers((current) =>
+      current.map((item) => {
+        if (item.id === offer.id) {
+          return { ...item, status: 'Accepted' };
+        }
+        if (item.jobId === offer.jobId && item.status === 'Pending') {
+          return { ...item, status: 'Declined' };
+        }
+        return item;
+      })
     );
+    setJobs((current) =>
+      current.map((item) =>
+        item.id === offer.jobId ? { ...item, status: 'Booked', acceptedOfferId: offer.id } : item
+      )
+    );
+    addAlert('Offer accepted', `${provider?.name ?? 'Provider'} is booked for ${job?.title ?? 'the job'}.`, 'Booked');
+    ensureConversation(offer, 'customer', `Accepted. You are booked for ${job?.schedule ?? 'the requested time'}.`);
   }
 
-  function sendChatMessage() {
+  function declineOffer(offer) {
+    const provider = providers.find((item) => item.id === offer.providerId);
+
+    setOffers((current) =>
+      current.map((item) => (item.id === offer.id ? { ...item, status: 'Declined' } : item))
+    );
+    addAlert('Offer declined', `${provider?.name ?? 'Provider'} was notified that the offer was declined.`, 'Closed');
+    ensureConversation(offer, 'customer', 'Thanks for the offer. I will pass on this one.');
+  }
+
+  function completeJob(jobId) {
+    const job = jobs.find((item) => item.id === jobId);
+
+    setJobs((current) =>
+      current.map((item) => (item.id === jobId ? { ...item, status: 'Completed' } : item))
+    );
+    setOffers((current) =>
+      current.map((item) =>
+        item.id === job?.acceptedOfferId ? { ...item, status: 'Completed' } : item
+      )
+    );
+    addAlert('Job completed', `${job?.title ?? 'The job'} is marked complete. Payment can be released.`, 'Done');
+  }
+
+  function ensureConversation(offer, from, text) {
+    const provider = providers.find((item) => item.id === offer.providerId);
+    const job = jobs.find((item) => item.id === offer.jobId);
+    const existing = messages.find((message) => message.offerId === offer.id);
+
+    if (existing) {
+      setThreads((current) => ({
+        ...current,
+        [existing.id]: [...(current[existing.id] ?? []), { id: makeId(), from, text }],
+      }));
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === existing.id ? { ...message, preview: text, time: 'Now', unread: 0 } : message
+        )
+      );
+      setSelectedMessageId(existing.id);
+      setActiveTab('messages');
+      return;
+    }
+
+    const conversationId = makeId();
+    setMessages((current) => [
+      {
+        id: conversationId,
+        participant: provider?.name ?? 'Provider',
+        jobId: offer.jobId,
+        offerId: offer.id,
+        preview: text,
+        time: 'Now',
+        unread: 0,
+      },
+      ...current,
+    ]);
+    setThreads((current) => ({
+      ...current,
+      [conversationId]: [
+        { id: makeId(), from: 'system', text: `Conversation for ${job?.title ?? 'job'}` },
+        { id: makeId(), from, text },
+      ],
+    }));
+    setSelectedMessageId(conversationId);
+    setActiveTab('messages');
+  }
+
+  function sendMessage() {
     const text = chatDraft.trim();
 
     if (!text || !selectedMessage) {
       return;
     }
 
-    setChatMessages((current) => [...current, { id: makeId(), from: 'customer', text }]);
+    setThreads((current) => ({
+      ...current,
+      [selectedMessage.id]: [
+        ...(current[selectedMessage.id] ?? []),
+        { id: makeId(), from: mode === 'Customer' ? 'customer' : 'provider', text },
+      ],
+    }));
     setMessages((current) =>
       current.map((message) =>
-        message.id === selectedMessage.id
-          ? { ...message, preview: text, time: 'Now', unread: 0 }
-          : message
+        message.id === selectedMessage.id ? { ...message, preview: text, time: 'Now', unread: 0 } : message
       )
     );
     setChatDraft('');
   }
 
-  function toggleNotificationPreference(title) {
-    setNotificationPrefs((current) => ({ ...current, [title]: !current[title] }));
+  function openMessage(id) {
+    setSelectedMessageId(id);
+    setMessages((current) =>
+      current.map((message) => (message.id === id ? { ...message, unread: 0 } : message))
+    );
   }
 
   return (
@@ -339,61 +644,82 @@ export default function App() {
         <View style={styles.header}>
           <View>
             <Text style={styles.brand}>WEEJOB</Text>
-            <Text style={styles.location}>Local jobs around Ikeja</Text>
+            <Text style={styles.location}>Ireland local services</Text>
           </View>
-          <Pressable style={styles.headerButton} onPress={() => setActiveTab('alerts')}>
-            <Text style={styles.headerButtonText}>!</Text>
-            <View style={styles.notificationDot} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              style={[styles.modeSwitch, mode === 'Provider' && styles.modeSwitchActive]}
+              onPress={() => setMode(mode === 'Customer' ? 'Provider' : 'Customer')}
+            >
+              <Text style={[styles.modeSwitchText, mode === 'Provider' && styles.modeSwitchTextActive]}>
+                {mode}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.content}>
-          {activeTab === 'home' && (
-            <HomeScreen
+          {activeTab === 'market' && (
+            <MarketScreen
+              categories={categories}
               compact={compact}
               jobs={filteredJobs}
+              mode={mode}
+              offerDrafts={offerDrafts}
+              providers={providers}
               searchTerm={searchTerm}
               selectedCategory={selectedCategory}
-              selectedCategoryLabel={selectedCategoryLabel}
+              selectedJob={selectedJob}
+              setActiveTab={setActiveTab}
               setSearchTerm={setSearchTerm}
               setSelectedCategory={setSelectedCategory}
-              setActiveTab={setActiveTab}
+              setSelectedJobId={setSelectedJobId}
+              sendOffer={sendOffer}
+              stats={stats}
+              updateOfferDraft={updateOfferDraft}
             />
           )}
           {activeTab === 'post' && (
             <PostScreen
-              draftJob={draftJob}
+              jobDraft={jobDraft}
               publishJob={publishJob}
-              saveDraftJob={saveDraftJob}
-              serviceMode={serviceMode}
-              setServiceMode={setServiceMode}
-              updateDraftJob={updateDraftJob}
+              updateJobDraft={updateJobDraft}
+            />
+          )}
+          {activeTab === 'offers' && (
+            <OffersScreen
+              acceptOffer={acceptOffer}
+              declineOffer={declineOffer}
+              jobs={jobs}
+              offers={offers}
+              providers={providers}
+              setActiveTab={setActiveTab}
             />
           )}
           {activeTab === 'messages' && (
             <MessagesScreen
               chatDraft={chatDraft}
-              chatMessages={chatMessages}
+              jobs={jobs}
               messages={messages}
+              openMessage={openMessage}
               selectedMessage={selectedMessage}
-              selectMessage={selectMessage}
-              sendChatMessage={sendChatMessage}
+              selectedThread={selectedThread}
+              sendMessage={sendMessage}
               setChatDraft={setChatDraft}
-            />
-          )}
-          {activeTab === 'alerts' && (
-            <AlertsScreen
-              alerts={alerts}
-              notificationPrefs={notificationPrefs}
-              toggleNotificationPreference={toggleNotificationPreference}
             />
           )}
           {activeTab === 'profile' && (
             <ProfileScreen
-              profileMode={profileMode}
+              alerts={alerts}
+              completeJob={completeJob}
+              instantBooking={instantBooking}
+              jobs={jobs}
+              mode={mode}
               serviceRadius={serviceRadius}
-              setProfileMode={setProfileMode}
+              setInstantBooking={setInstantBooking}
+              setMode={setMode}
               setServiceRadius={setServiceRadius}
+              stats={stats}
             />
           )}
         </View>
@@ -420,100 +746,109 @@ export default function App() {
   );
 }
 
-function HomeScreen({
+function MarketScreen({
+  categories,
   compact,
   jobs,
+  mode,
+  offerDrafts,
+  providers,
   searchTerm,
   selectedCategory,
-  selectedCategoryLabel,
+  selectedJob,
+  setActiveTab,
   setSearchTerm,
   setSelectedCategory,
-  setActiveTab,
+  setSelectedJobId,
+  sendOffer,
+  stats,
+  updateOfferDraft,
 }) {
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
-    >
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <View style={styles.hero}>
         <View style={styles.heroCopy}>
-          <Text style={styles.eyebrow}>LOCAL SERVICE MARKETPLACE</Text>
-          <Text style={styles.heroTitle}>Find trusted help nearby.</Text>
+          <Text style={styles.eyebrow}>VERIFIED LOCAL MARKETPLACE</Text>
+          <Text style={styles.heroTitle}>Book trusted help across Ireland.</Text>
           <Text style={styles.heroText}>
-            Book cleaners, plumbers, painters, movers and errand runners in your area.
+            Post work, compare offers, accept a provider, message securely and track completion.
           </Text>
-        </View>
-        <View style={styles.heroPanel}>
-          <Text style={styles.heroPanelLabel}>Open jobs</Text>
-          <Text style={styles.heroPanelValue}>153</Text>
-          <Text style={styles.heroPanelMeta}>within 5 km</Text>
+          <View style={styles.heroStats}>
+            <MiniStat label="Open jobs" value={stats.openJobs} />
+            <MiniStat label="Offers" value={stats.pendingOffers} />
+            <MiniStat label="Booked" value={stats.bookedJobs} />
+          </View>
         </View>
       </View>
 
       <View style={styles.searchRow}>
         <TextInput
-          placeholder="Search local services"
+          placeholder="Search service, location or provider"
           placeholderTextColor={COLORS.muted}
           value={searchTerm}
           onChangeText={setSearchTerm}
           style={styles.searchInput}
         />
         <Pressable style={styles.filterButton} onPress={() => setSearchTerm('')}>
-          <Text style={styles.filterButtonText}>{searchTerm ? 'Clear' : 'Tune'}</Text>
+          <Text style={styles.filterButtonText}>{searchTerm ? 'Clear' : 'All'}</Text>
         </Pressable>
       </View>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Categories</Text>
-        <Text style={styles.sectionLink}>See all</Text>
-      </View>
-      <View style={styles.categoryGrid}>
-        {categories.map((category) => {
-          const active = selectedCategory === category.id;
-          return (
-            <Pressable
-              key={category.id}
-              style={[
-                styles.categoryCard,
-                compact && styles.categoryCardCompact,
-                active && styles.categoryCardActive,
-              ]}
-              onPress={() => setSelectedCategory(category.id)}
-            >
-              <View style={[styles.categoryMark, { backgroundColor: category.tone }]}>
-                <Text style={styles.categoryMarkText}>{category.label.slice(0, 1)}</Text>
-              </View>
-              <Text style={styles.categoryLabel}>{category.label}</Text>
-              <Text style={styles.categoryMeta}>{category.count} jobs</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRail}>
+        <CategoryPill
+          active={selectedCategory === 'all'}
+          label="All"
+          onPress={() => setSelectedCategory('all')}
+        />
+        {categories.map((category) => (
+          <CategoryPill
+            key={category.id}
+            active={selectedCategory === category.id}
+            label={category.label}
+            tone={category.tone}
+            count={category.count}
+            onPress={() => setSelectedCategory(category.id)}
+          />
+        ))}
+      </ScrollView>
 
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={styles.sectionTitle}>{selectedCategoryLabel} jobs near you</Text>
-          <Text style={styles.sectionSubtitle}>Sorted by distance and urgency</Text>
+          <Text style={styles.sectionTitle}>{mode === 'Provider' ? 'Jobs needing offers' : 'Live marketplace'}</Text>
+          <Text style={styles.sectionSubtitle}>Ireland-ready pricing, locations and workflow</Text>
         </View>
-        <Pressable onPress={() => setActiveTab('post')}>
-          <Text style={styles.sectionLink}>Post</Text>
+        <Pressable style={styles.textAction} onPress={() => setActiveTab('post')}>
+          <Text style={styles.textActionLabel}>Post job</Text>
         </Pressable>
       </View>
+
       <View style={styles.stack}>
         {jobs.length > 0 ? (
-          jobs.map((job) => <JobCard key={job.id} job={job} />)
+          jobs.map((job) => (
+            <JobCard
+              key={job.id}
+              compact={compact}
+              draft={offerDrafts[job.id] ?? emptyOfferDraft}
+              job={job}
+              mode={mode}
+              selected={selectedJob?.id === job.id}
+              onPress={() => setSelectedJobId(job.id)}
+              sendOffer={() => sendOffer(job)}
+              updateDraft={(field, value) => updateOfferDraft(job.id, field, value)}
+            />
+          ))
         ) : (
           <EmptyState
-            title="No jobs here yet"
-            body="Post the first job in this category or try a different search."
-            action="Post job"
+            title="No matching jobs"
+            body="Try another category or clear the search to see more Ireland-based work."
+            action="Post a job"
             onPress={() => setActiveTab('post')}
           />
         )}
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Top providers</Text>
+        <Text style={styles.sectionTitle}>Verified providers</Text>
         <Text style={styles.sectionLink}>Invite</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.providerRail}>
@@ -525,13 +860,38 @@ function HomeScreen({
   );
 }
 
-function JobCard({ job }) {
+function MiniStat({ label, value }) {
   return (
-    <Pressable style={styles.jobCard}>
-      <View style={styles.jobHeader}>
+    <View style={styles.miniStat}>
+      <Text style={styles.miniStatValue}>{value}</Text>
+      <Text style={styles.miniStatLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function CategoryPill({ active, count, label, onPress, tone }) {
+  return (
+    <Pressable style={[styles.categoryPill, active && styles.categoryPillActive]} onPress={onPress}>
+      {tone && <View style={[styles.categoryDot, { backgroundColor: tone }]} />}
+      <Text style={[styles.categoryPillText, active && styles.categoryPillTextActive]}>{label}</Text>
+      {typeof count === 'number' && <Text style={styles.categoryCount}>{count}</Text>}
+    </Pressable>
+  );
+}
+
+function JobCard({ compact, draft, job, mode, onPress, selected, sendOffer, updateDraft }) {
+  const booked = job.status !== 'Open';
+
+  return (
+    <Pressable style={[styles.jobCard, selected && styles.jobCardSelected]} onPress={onPress}>
+      <View style={styles.jobTop}>
         <View style={styles.jobTitleWrap}>
-          <Text style={styles.jobCategory}>{job.category}</Text>
+          <View style={styles.inlineMeta}>
+            <Text style={styles.jobCategory}>{job.category}</Text>
+            <StatusPill status={job.status} />
+          </View>
           <Text style={styles.jobTitle}>{job.title}</Text>
+          <Text style={styles.jobDescription}>{job.description}</Text>
         </View>
         {job.urgent && (
           <View style={styles.urgentPill}>
@@ -539,22 +899,64 @@ function JobCard({ job }) {
           </View>
         )}
       </View>
-      <View style={styles.jobMetaRow}>
-        <Text style={styles.jobMeta}>{job.location}</Text>
-        <Text style={styles.dotSeparator}>.</Text>
-        <Text style={styles.jobMeta}>{job.distance}</Text>
+
+      <View style={styles.detailGrid}>
+        <Detail label="Budget" value={formatMoney(job.budget)} />
+        <Detail label="When" value={job.schedule} />
+        <Detail label="Where" value={job.location} />
+        <Detail label="Distance" value={job.distance} />
       </View>
-      <View style={styles.jobFooter}>
-        <View>
-          <Text style={styles.payLabel}>Budget</Text>
-          <Text style={styles.payValue}>{job.pay}</Text>
+
+      {mode === 'Provider' && !booked && (
+        <View style={styles.offerComposer}>
+          <Text style={styles.offerComposerTitle}>Send an offer</Text>
+          <View style={[styles.offerRow, compact && styles.offerRowCompact]}>
+            <TextInput
+              placeholder="Price"
+              placeholderTextColor={COLORS.muted}
+              keyboardType="numeric"
+              value={draft.amount}
+              onChangeText={(value) => updateDraft('amount', value)}
+              style={styles.offerInputSmall}
+            />
+            <TextInput
+              placeholder="Arrival time"
+              placeholderTextColor={COLORS.muted}
+              value={draft.eta}
+              onChangeText={(value) => updateDraft('eta', value)}
+              style={styles.offerInput}
+            />
+          </View>
+          <TextInput
+            placeholder="Short note for the customer"
+            placeholderTextColor={COLORS.muted}
+            value={draft.note}
+            onChangeText={(value) => updateDraft('note', value)}
+            style={styles.offerNote}
+          />
+          <Pressable style={styles.primaryAction} onPress={sendOffer}>
+            <Text style={styles.primaryActionText}>Send offer</Text>
+          </Pressable>
         </View>
-        <View style={styles.jobFooterRight}>
-          <Text style={styles.jobTime}>{job.time}</Text>
-          <Text style={styles.bidCount}>{job.bids} bids</Text>
-        </View>
-      </View>
+      )}
     </Pressable>
+  );
+}
+
+function Detail({ label, value }) {
+  return (
+    <View style={styles.detailItem}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value}</Text>
+    </View>
+  );
+}
+
+function StatusPill({ status }) {
+  return (
+    <View style={[styles.statusPill, { borderColor: statusTone(status) }]}>
+      <Text style={[styles.statusPillText, { color: statusTone(status) }]}>{status}</Text>
+    </View>
   );
 }
 
@@ -564,154 +966,194 @@ function ProviderCard({ provider }) {
       <View style={[styles.providerAvatar, { backgroundColor: provider.tone }]}>
         <Text style={styles.providerInitials}>{provider.initials}</Text>
       </View>
-      <Text style={styles.providerName}>{provider.name}</Text>
-      <Text style={styles.providerSkill}>{provider.skill}</Text>
+      <View style={styles.providerVerifiedRow}>
+        <Text style={styles.providerName}>{provider.name}</Text>
+        {provider.verified && <Text style={styles.verifiedText}>Verified</Text>}
+      </View>
+      <Text style={styles.providerSkill}>{provider.category} in {provider.location}</Text>
       <View style={styles.providerStats}>
         <Text style={styles.providerStat}>{provider.rating} rating</Text>
-        <Text style={styles.providerStat}>{provider.jobs} jobs</Text>
+        <Text style={styles.providerStat}>{provider.completed} jobs</Text>
       </View>
-      <Text style={styles.providerResponse}>Replies in {provider.response}</Text>
+      <Text style={styles.providerResponse}>From {formatMoney(provider.hourly)}/hr. Replies in {provider.response}</Text>
     </Pressable>
   );
 }
 
-function PostScreen({
-  draftJob,
-  publishJob,
-  saveDraftJob,
-  serviceMode,
-  setServiceMode,
-  updateDraftJob,
-}) {
-  const isHiring = serviceMode === 'Hire';
-
+function PostScreen({ jobDraft, publishJob, updateJobDraft }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.screenTitle}>{isHiring ? 'Post a local job' : 'Offer a service'}</Text>
+      <Text style={styles.screenTitle}>Post a job</Text>
       <Text style={styles.screenText}>
-        {isHiring
-          ? 'Describe the work, set a fair budget, then chat with verified local providers.'
-          : 'Share what you do, where you work, and the starting price customers should expect.'}
+        Create a clear request so verified providers can price it accurately and send offers.
       </Text>
-
-      <View style={styles.segmented}>
-        {['Hire', 'Offer'].map((mode) => {
-          const active = serviceMode === mode;
-          return (
-            <Pressable
-              key={mode}
-              style={[styles.segment, active && styles.segmentActive]}
-              onPress={() => setServiceMode(mode)}
-            >
-              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
-                {mode === 'Hire' ? 'I need help' : 'I offer service'}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
 
       <View style={styles.formCard}>
         <LabeledInput
-          label={isHiring ? 'Job title' : 'Service title'}
-          placeholder={isHiring ? 'Example: Clean my 2-bedroom apartment' : 'Example: Weekend plumbing repairs'}
-          value={draftJob.title}
-          onChangeText={(value) => updateDraftJob('title', value)}
+          label="Job title"
+          placeholder="Example: Paint a bedroom"
+          value={jobDraft.title}
+          onChangeText={(value) => updateJobDraft('title', value)}
         />
         <LabeledInput
           label="Category"
-          placeholder="Cleaning, plumbing, repairs..."
-          value={draftJob.category}
-          onChangeText={(value) => updateDraftJob('category', value)}
+          placeholder="Cleaning, plumbing, electrical..."
+          value={jobDraft.category}
+          onChangeText={(value) => updateJobDraft('category', value)}
         />
         <LabeledInput
           label="Location"
-          placeholder="Street or neighborhood"
-          value={draftJob.location}
-          onChangeText={(value) => updateDraftJob('location', value)}
+          placeholder="Dublin 2, Cork City, Galway..."
+          value={jobDraft.location}
+          onChangeText={(value) => updateJobDraft('location', value)}
         />
         <LabeledInput
-          label={isHiring ? 'Budget' : 'Starting price'}
-          placeholder="Example: NGN 20,000"
+          label="Budget"
+          placeholder="Example: 150"
           keyboardType="numeric"
-          value={draftJob.budget}
-          onChangeText={(value) => updateDraftJob('budget', value)}
+          value={jobDraft.budget}
+          onChangeText={(value) => updateJobDraft('budget', value)}
         />
         <LabeledInput
-          label="Details"
-          placeholder={
-            isHiring
-              ? 'What should the provider bring? Any timing or access notes?'
-              : 'Describe your tools, availability, coverage area and proof of work.'
-          }
-          multiline
-          value={draftJob.details}
-          onChangeText={(value) => updateDraftJob('details', value)}
+          label="Schedule"
+          placeholder="Today, tomorrow morning, this weekend..."
+          value={jobDraft.schedule}
+          onChangeText={(value) => updateJobDraft('schedule', value)}
         />
-        <View style={styles.formRow}>
-          <Pressable style={styles.secondaryAction} onPress={saveDraftJob}>
-            <Text style={styles.secondaryActionText}>Save draft</Text>
-          </Pressable>
-          <Pressable style={styles.primaryAction} onPress={publishJob}>
-            <Text style={styles.primaryActionText}>{isHiring ? 'Publish job' : 'Publish service'}</Text>
-          </Pressable>
-        </View>
+        <LabeledInput
+          label="Job details"
+          placeholder="Describe access, materials, parking, photos needed and any must-haves."
+          multiline
+          value={jobDraft.description}
+          onChangeText={(value) => updateJobDraft('description', value)}
+        />
+        <Pressable style={styles.primaryActionLarge} onPress={publishJob}>
+          <Text style={styles.primaryActionText}>Publish job</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.safetyCard}>
-        <Text style={styles.safetyTitle}>Built-in safety checks</Text>
-        <Text style={styles.safetyText}>Provider identity, ratings, job completion and payment release are tracked in the app.</Text>
+      <View style={styles.trustCard}>
+        <Text style={styles.trustTitle}>Marketplace protections</Text>
+        <Text style={styles.trustText}>
+          Provider verification, offer history, secure chat, booking status and completion records are built into this flow.
+        </Text>
       </View>
     </ScrollView>
   );
 }
 
-function LabeledInput({ label, placeholder, multiline, keyboardType, value, onChangeText }) {
+function LabeledInput({ keyboardType, label, multiline, onChangeText, placeholder, value }) {
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
       <TextInput
+        keyboardType={keyboardType}
+        multiline={multiline}
+        onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={COLORS.muted}
-        multiline={multiline}
-        keyboardType={keyboardType}
-        value={value}
-        onChangeText={onChangeText}
         style={[styles.input, multiline && styles.textArea]}
+        value={value}
       />
     </View>
   );
 }
 
+function OffersScreen({ acceptOffer, declineOffer, jobs, offers, providers, setActiveTab }) {
+  const sortedOffers = [...offers].sort((a, b) => {
+    if (a.status === b.status) {
+      return b.id - a.id;
+    }
+    return a.status === 'Pending' ? -1 : 1;
+  });
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <Text style={styles.screenTitle}>Offers</Text>
+      <Text style={styles.screenText}>Review pricing, arrival time and provider notes before booking.</Text>
+
+      <View style={styles.stack}>
+        {sortedOffers.length > 0 ? (
+          sortedOffers.map((offer) => {
+            const job = jobs.find((item) => item.id === offer.jobId);
+            const provider = providers.find((item) => item.id === offer.providerId);
+            const pending = offer.status === 'Pending';
+
+            return (
+              <View key={offer.id} style={styles.offerCard}>
+                <View style={styles.offerHeader}>
+                  <View>
+                    <Text style={styles.offerAmount}>{formatMoney(offer.amount)}</Text>
+                    <Text style={styles.offerProvider}>{provider?.name ?? 'Provider'}</Text>
+                  </View>
+                  <StatusPill status={offer.status} />
+                </View>
+                <Text style={styles.offerJob}>{job?.title ?? 'Job'}</Text>
+                <Text style={styles.offerNoteText}>{offer.note}</Text>
+                <View style={styles.offerMetaRow}>
+                  <Text style={styles.offerMeta}>Arrival: {offer.eta}</Text>
+                  <Text style={styles.offerMeta}>{offer.createdAt}</Text>
+                </View>
+                {pending ? (
+                  <View style={styles.offerActions}>
+                    <Pressable style={styles.declineAction} onPress={() => declineOffer(offer)}>
+                      <Text style={styles.declineActionText}>Decline</Text>
+                    </Pressable>
+                    <Pressable style={styles.acceptAction} onPress={() => acceptOffer(offer)}>
+                      <Text style={styles.acceptActionText}>Accept offer</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable style={styles.secondaryWideAction} onPress={() => setActiveTab('messages')}>
+                    <Text style={styles.secondaryWideActionText}>Open conversation</Text>
+                  </Pressable>
+                )}
+              </View>
+            );
+          })
+        ) : (
+          <EmptyState
+            title="No offers yet"
+            body="Switch to Provider mode in the header and send an offer from the marketplace."
+            action="Browse jobs"
+            onPress={() => setActiveTab('market')}
+          />
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
 function MessagesScreen({
   chatDraft,
-  chatMessages,
+  jobs,
   messages,
+  openMessage,
   selectedMessage,
-  selectMessage,
-  sendChatMessage,
+  selectedThread,
+  sendMessage,
   setChatDraft,
 }) {
+  const selectedJob = jobs.find((job) => job.id === selectedMessage?.jobId);
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <Text style={styles.screenTitle}>Messages</Text>
-      <Text style={styles.screenText}>Coordinate job details before accepting bids or releasing payment.</Text>
+      <Text style={styles.screenText}>Keep every offer, booking and job update attached to the right conversation.</Text>
+
       <View style={styles.stack}>
         {messages.map((message) => (
           <Pressable
             key={message.id}
-            style={[
-              styles.messageCard,
-              selectedMessage?.id === message.id && styles.messageCardActive,
-            ]}
-            onPress={() => selectMessage(message.id)}
+            style={[styles.messageCard, selectedMessage?.id === message.id && styles.messageCardActive]}
+            onPress={() => openMessage(message.id)}
           >
             <View style={styles.messageAvatar}>
-              <Text style={styles.messageAvatarText}>{message.name.slice(0, 1)}</Text>
+              <Text style={styles.messageAvatarText}>{message.participant.slice(0, 1)}</Text>
             </View>
             <View style={styles.messageBody}>
               <View style={styles.messageTop}>
-                <Text style={styles.messageName}>{message.name}</Text>
+                <Text style={styles.messageName}>{message.participant}</Text>
                 <Text style={styles.messageTime}>{message.time}</Text>
               </View>
               <Text style={styles.messagePreview}>{message.preview}</Text>
@@ -725,17 +1167,29 @@ function MessagesScreen({
         ))}
       </View>
 
-      <View style={styles.chatPreview}>
-        <Text style={styles.chatTitle}>{selectedMessage?.name ?? 'Conversation'}</Text>
-        {chatMessages.map((message) => {
+      <View style={styles.chatPanel}>
+        <Text style={styles.chatTitle}>{selectedMessage?.participant ?? 'Conversation'}</Text>
+        <Text style={styles.chatSubtitle}>{selectedJob?.title ?? 'Select a conversation'}</Text>
+        {selectedThread.map((message) => {
           const outgoing = message.from === 'customer';
+          const system = message.from === 'system';
 
           return (
             <View
               key={message.id}
-              style={outgoing ? styles.bubbleOutgoing : styles.bubbleIncoming}
+              style={[
+                styles.bubble,
+                outgoing && styles.bubbleOutgoing,
+                system && styles.bubbleSystem,
+              ]}
             >
-              <Text style={outgoing ? styles.bubbleOutgoingText : styles.bubbleIncomingText}>
+              <Text
+                style={[
+                  styles.bubbleText,
+                  outgoing && styles.bubbleOutgoingText,
+                  system && styles.bubbleSystemText,
+                ]}
+              >
                 {message.text}
               </Text>
             </View>
@@ -747,10 +1201,10 @@ function MessagesScreen({
             placeholderTextColor={COLORS.muted}
             value={chatDraft}
             onChangeText={setChatDraft}
-            onSubmitEditing={sendChatMessage}
+            onSubmitEditing={sendMessage}
             style={styles.replyInput}
           />
-          <Pressable style={styles.sendButton} onPress={sendChatMessage}>
+          <Pressable style={styles.sendButton} onPress={sendMessage}>
             <Text style={styles.sendButtonText}>Send</Text>
           </Pressable>
         </View>
@@ -759,79 +1213,43 @@ function MessagesScreen({
   );
 }
 
-function AlertsScreen({ alerts, notificationPrefs, toggleNotificationPreference }) {
-  return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.screenTitle}>Notifications</Text>
-      <Text style={styles.screenText}>Bids, arrival updates, chat alerts and payment reminders stay here.</Text>
-      <View style={styles.stack}>
-        {alerts.map((alert) => (
-          <Pressable key={alert.id} style={styles.alertCard}>
-            <View style={styles.alertIcon}>
-              <Text style={styles.alertIconText}>!</Text>
-            </View>
-            <View style={styles.alertBody}>
-              <View style={styles.messageTop}>
-                <Text style={styles.alertTitle}>{alert.title}</Text>
-                <View style={styles.alertStatus}>
-                  <Text style={styles.alertStatusText}>{alert.status}</Text>
-                </View>
-              </View>
-              <Text style={styles.alertText}>{alert.body}</Text>
-            </View>
-          </Pressable>
-        ))}
-      </View>
+function ProfileScreen({
+  alerts,
+  completeJob,
+  instantBooking,
+  jobs,
+  mode,
+  serviceRadius,
+  setInstantBooking,
+  setMode,
+  setServiceRadius,
+  stats,
+}) {
+  const bookedJobs = jobs.filter((job) => job.status === 'Booked');
 
-      <View style={styles.preferenceCard}>
-        <Text style={styles.preferenceTitle}>Notification preferences</Text>
-        {Object.entries(notificationPrefs).map(([title, active]) => (
-          <PreferenceRow
-            key={title}
-            title={title}
-            active={active}
-            onPress={() => toggleNotificationPreference(title)}
-          />
-        ))}
-      </View>
-    </ScrollView>
-  );
-}
-
-function PreferenceRow({ title, active, onPress }) {
-  return (
-    <Pressable style={styles.preferenceRow} onPress={onPress}>
-      <Text style={styles.preferenceLabel}>{title}</Text>
-      <View style={[styles.toggle, active && styles.toggleActive]}>
-        <View style={[styles.toggleKnob, active && styles.toggleKnobActive]} />
-      </View>
-    </Pressable>
-  );
-}
-
-function ProfileScreen({ profileMode, serviceRadius, setProfileMode, setServiceRadius }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <View style={styles.profileTop}>
         <View style={styles.profileAvatar}>
-          <Text style={styles.profileAvatarText}>WO</Text>
+          <Text style={styles.profileAvatarText}>WJ</Text>
         </View>
         <View style={styles.profileCopy}>
-          <Text style={styles.profileName}>WEEJOB Owner</Text>
+          <Text style={styles.profileName}>WEEJOB Ireland</Text>
           <Text style={styles.profileMeta}>Verified customer and provider account</Text>
         </View>
       </View>
 
       <View style={styles.modeCard}>
-        <Text style={styles.preferenceTitle}>Account mode</Text>
+        <Text style={styles.preferenceTitle}>Account controls</Text>
         <View style={styles.modeRow}>
-          {['Customer', 'Provider'].map((mode) => (
-            <ModeChip
-              key={mode}
-              active={profileMode === mode}
-              label={mode}
-              onPress={() => setProfileMode(mode)}
-            />
+          {['Customer', 'Provider'].map((item) => (
+            <Pressable
+              key={item}
+              style={[styles.modeChip, mode === item && styles.modeChipActive]}
+              onPress={() => setMode(item)}
+            >
+              <Text style={[styles.modeChipText, mode === item && styles.modeChipTextActive]}>{item}</Text>
+            </Pressable>
           ))}
         </View>
         <View style={styles.radiusRow}>
@@ -839,55 +1257,77 @@ function ProfileScreen({ profileMode, serviceRadius, setProfileMode, setServiceR
           <View style={styles.radiusControls}>
             <Pressable
               style={styles.radiusButton}
-              onPress={() => setServiceRadius((current) => Math.max(1, current - 1))}
+              onPress={() => setServiceRadius((current) => Math.max(3, current - 1))}
             >
               <Text style={styles.radiusButtonText}>-</Text>
             </Pressable>
             <Text style={styles.radiusValue}>{serviceRadius} km</Text>
             <Pressable
               style={styles.radiusButton}
-              onPress={() => setServiceRadius((current) => Math.min(25, current + 1))}
+              onPress={() => setServiceRadius((current) => Math.min(50, current + 1))}
             >
               <Text style={styles.radiusButtonText}>+</Text>
             </Pressable>
           </View>
         </View>
+        <PreferenceRow
+          active={instantBooking}
+          title="Instant booking eligible"
+          onPress={() => setInstantBooking((current) => !current)}
+        />
       </View>
 
       <View style={styles.scoreGrid}>
-        <MetricCard label="Jobs posted" value="12" />
-        <MetricCard label="Completed" value="9" />
-        <MetricCard label="Rating" value="4.8" />
+        <MetricCard label="Open jobs" value={stats.openJobs} />
+        <MetricCard label="Pending offers" value={stats.pendingOffers} />
+        <MetricCard label="Booked" value={stats.bookedJobs} />
       </View>
 
       <View style={styles.preferenceCard}>
-        <Text style={styles.preferenceTitle}>Account setup</Text>
-        <SetupRow title="Identity verification" status="Complete" />
-        <SetupRow title="Payment wallet" status="Ready" />
-        <SetupRow title="Service radius" status={`${serviceRadius} km`} />
-        <SetupRow title="Support center" status="Open" />
+        <Text style={styles.preferenceTitle}>Booked jobs</Text>
+        {bookedJobs.length > 0 ? (
+          bookedJobs.map((job) => (
+            <View key={job.id} style={styles.bookedRow}>
+              <View style={styles.bookedCopy}>
+                <Text style={styles.setupTitle}>{job.title}</Text>
+                <Text style={styles.setupMeta}>{job.location} - {job.schedule}</Text>
+              </View>
+              <Pressable style={styles.completeAction} onPress={() => completeJob(job.id)}>
+                <Text style={styles.completeActionText}>Complete</Text>
+              </Pressable>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyInline}>Accepted offers will appear here.</Text>
+        )}
+      </View>
+
+      <View style={styles.preferenceCard}>
+        <Text style={styles.preferenceTitle}>Activity</Text>
+        {alerts.slice(0, 5).map((alert) => (
+          <View key={alert.id} style={styles.alertRow}>
+            <View style={styles.alertMark}>
+              <Text style={styles.alertMarkText}>{alert.status.slice(0, 1)}</Text>
+            </View>
+            <View style={styles.alertCopy}>
+              <Text style={styles.alertTitle}>{alert.title}</Text>
+              <Text style={styles.alertText}>{alert.body}</Text>
+            </View>
+          </View>
+        ))}
       </View>
     </ScrollView>
   );
 }
 
-function ModeChip({ active, label, onPress }) {
+function PreferenceRow({ active, onPress, title }) {
   return (
-    <Pressable style={[styles.modeChip, active && styles.modeChipActive]} onPress={onPress}>
-      <Text style={[styles.modeChipText, active && styles.modeChipTextActive]}>{label}</Text>
+    <Pressable style={styles.preferenceRow} onPress={onPress}>
+      <Text style={styles.preferenceLabel}>{title}</Text>
+      <View style={[styles.toggle, active && styles.toggleActive]}>
+        <View style={[styles.toggleKnob, active && styles.toggleKnobActive]} />
+      </View>
     </Pressable>
-  );
-}
-
-function EmptyState({ title, body, action, onPress }) {
-  return (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyText}>{body}</Text>
-      <Pressable style={styles.emptyAction} onPress={onPress}>
-        <Text style={styles.emptyActionText}>{action}</Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -900,12 +1340,15 @@ function MetricCard({ label, value }) {
   );
 }
 
-function SetupRow({ title, status }) {
+function EmptyState({ action, body, onPress, title }) {
   return (
-    <Pressable style={styles.setupRow}>
-      <Text style={styles.setupTitle}>{title}</Text>
-      <Text style={styles.setupStatus}>{status}</Text>
-    </Pressable>
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptyText}>{body}</Text>
+      <Pressable style={styles.emptyAction} onPress={onPress}>
+        <Text style={styles.emptyActionText}>{action}</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -918,7 +1361,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    minHeight: 76,
+    minHeight: 78,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 10,
@@ -937,33 +1380,34 @@ const styles = StyleSheet.create({
     marginTop: 3,
     color: COLORS.muted,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modeSwitch: {
+    minHeight: 42,
+    minWidth: 104,
+    borderRadius: 8,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.line,
   },
-  headerButtonText: {
+  modeSwitchActive: {
+    backgroundColor: COLORS.ink,
+    borderColor: COLORS.ink,
+  },
+  modeSwitchText: {
     color: COLORS.ink,
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: '900',
   },
-  notificationDot: {
-    position: 'absolute',
-    top: 9,
-    right: 10,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: COLORS.red,
-    borderWidth: 1,
-    borderColor: COLORS.white,
+  modeSwitchTextActive: {
+    color: COLORS.white,
   },
   content: {
     flex: 1,
@@ -974,17 +1418,12 @@ const styles = StyleSheet.create({
     gap: 18,
   },
   hero: {
-    minHeight: 176,
     borderRadius: 8,
     padding: 18,
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 14,
     backgroundColor: COLORS.ink,
   },
   heroCopy: {
-    flex: 1,
-    justifyContent: 'space-between',
+    gap: 10,
   },
   eyebrow: {
     color: COLORS.primary,
@@ -993,42 +1432,40 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   heroTitle: {
-    marginTop: 10,
     color: COLORS.white,
-    fontSize: 31,
-    lineHeight: 36,
+    fontSize: 30,
+    lineHeight: 35,
     fontWeight: '900',
     letterSpacing: 0,
   },
   heroText: {
-    marginTop: 10,
     color: '#DCE8D4',
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
   },
-  heroPanel: {
-    width: 104,
+  heroStats: {
+    marginTop: 8,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  miniStat: {
+    flex: 1,
+    minHeight: 70,
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#26351F',
   },
-  heroPanelLabel: {
-    color: COLORS.ink,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  heroPanelValue: {
-    marginTop: 10,
-    color: COLORS.ink,
-    fontSize: 34,
+  miniStatValue: {
+    color: COLORS.primary,
+    fontSize: 21,
     fontWeight: '900',
-    letterSpacing: 0,
   },
-  heroPanelMeta: {
-    color: COLORS.primaryDark,
-    fontSize: 12,
+  miniStatLabel: {
+    marginTop: 2,
+    color: '#DCE8D4',
+    fontSize: 11,
     fontWeight: '800',
   },
   searchRow: {
@@ -1038,19 +1475,19 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 50,
+    minHeight: 50,
     borderRadius: 8,
     paddingHorizontal: 14,
     color: COLORS.ink,
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.line,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
   filterButton: {
-    height: 50,
-    minWidth: 64,
+    minWidth: 62,
+    minHeight: 50,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1061,10 +1498,47 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
   },
+  categoryRail: {
+    gap: 9,
+    paddingRight: 20,
+  },
+  categoryPill: {
+    minHeight: 42,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  categoryPillActive: {
+    borderColor: COLORS.primaryDark,
+    backgroundColor: '#F9FFE8',
+  },
+  categoryDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  categoryPillText: {
+    color: COLORS.ink,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  categoryPillTextActive: {
+    color: COLORS.primaryDark,
+  },
+  categoryCount: {
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-end',
+    justifyContent: 'space-between',
     gap: 12,
   },
   sectionTitle: {
@@ -1079,159 +1553,203 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: COLORS.muted,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   sectionLink: {
     color: COLORS.primaryDark,
     fontSize: 13,
     fontWeight: '900',
   },
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  categoryCard: {
-    width: '31.7%',
-    minWidth: 96,
-    minHeight: 112,
+  textAction: {
+    minHeight: 36,
     borderRadius: 8,
-    padding: 12,
-    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.line,
   },
-  categoryCardCompact: {
-    width: '48%',
-  },
-  categoryCardActive: {
-    borderColor: COLORS.primaryDark,
-    backgroundColor: '#FBFFF1',
-  },
-  categoryMark: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryMarkText: {
-    color: COLORS.ink,
-    fontSize: 14,
+  textActionLabel: {
+    color: COLORS.primaryDark,
+    fontSize: 13,
     fontWeight: '900',
-  },
-  categoryLabel: {
-    color: COLORS.ink,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  categoryMeta: {
-    color: COLORS.muted,
-    fontSize: 12,
-    fontWeight: '700',
   },
   stack: {
     gap: 12,
   },
   jobCard: {
     borderRadius: 8,
-    padding: 16,
+    padding: 15,
+    gap: 14,
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.line,
   },
-  jobHeader: {
+  jobCardSelected: {
+    borderColor: COLORS.primaryDark,
+  },
+  jobTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 12,
   },
   jobTitleWrap: {
     flex: 1,
+  },
+  inlineMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
   },
   jobCategory: {
     color: COLORS.primaryDark,
     fontSize: 12,
     fontWeight: '900',
   },
+  statusPill: {
+    minHeight: 24,
+    borderRadius: 12,
+    paddingHorizontal: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    backgroundColor: COLORS.white,
+  },
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
   jobTitle: {
-    marginTop: 5,
+    marginTop: 7,
     color: COLORS.ink,
     fontSize: 18,
     lineHeight: 23,
     fontWeight: '900',
   },
+  jobDescription: {
+    marginTop: 7,
+    color: COLORS.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+  },
   urgentPill: {
     height: 28,
-    paddingHorizontal: 10,
     borderRadius: 14,
+    paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFE8E8',
+    backgroundColor: '#FFECE9',
   },
   urgentText: {
-    color: '#B22D2D',
+    color: COLORS.red,
     fontSize: 12,
     fontWeight: '900',
   },
-  jobMetaRow: {
-    marginTop: 12,
+  detailGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  jobMeta: {
+  detailItem: {
+    width: '47%',
+    minHeight: 58,
+    borderRadius: 8,
+    padding: 10,
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+  },
+  detailLabel: {
     color: COLORS.muted,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  dotSeparator: {
-    color: COLORS.muted,
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  jobFooter: {
-    marginTop: 15,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.line,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    gap: 12,
-  },
-  payLabel: {
-    color: COLORS.muted,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  payValue: {
-    marginTop: 3,
-    color: COLORS.ink,
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  jobFooterRight: {
-    alignItems: 'flex-end',
-  },
-  jobTime: {
-    color: COLORS.ink,
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '800',
   },
-  bidCount: {
-    marginTop: 4,
-    color: COLORS.muted,
-    fontSize: 12,
+  detailValue: {
+    marginTop: 3,
+    color: COLORS.ink,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  offerComposer: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.line,
+    paddingTop: 14,
+    gap: 10,
+  },
+  offerComposerTitle: {
+    color: COLORS.ink,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  offerRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  offerRowCompact: {
+    flexDirection: 'column',
+  },
+  offerInputSmall: {
+    width: 92,
+    minHeight: 46,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    color: COLORS.ink,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    fontSize: 13,
     fontWeight: '700',
+  },
+  offerInput: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    color: COLORS.ink,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  offerNote: {
+    minHeight: 46,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    color: COLORS.ink,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  primaryAction: {
+    minHeight: 46,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  primaryActionLarge: {
+    minHeight: 52,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  primaryActionText: {
+    color: COLORS.ink,
+    fontSize: 14,
+    fontWeight: '900',
   },
   providerRail: {
     gap: 12,
     paddingRight: 20,
   },
   providerCard: {
-    width: 190,
-    minHeight: 192,
+    width: 210,
+    minHeight: 196,
     borderRadius: 8,
     padding: 15,
     backgroundColor: COLORS.white,
@@ -1250,14 +1768,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
-  providerName: {
+  providerVerifiedRow: {
     marginTop: 12,
+    gap: 6,
+  },
+  providerName: {
     color: COLORS.ink,
     fontSize: 16,
     fontWeight: '900',
   },
+  verifiedText: {
+    alignSelf: 'flex-start',
+    color: COLORS.teal,
+    fontSize: 11,
+    fontWeight: '900',
+  },
   providerSkill: {
-    marginTop: 4,
+    marginTop: 5,
     color: COLORS.muted,
     fontSize: 13,
     fontWeight: '700',
@@ -1276,12 +1803,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: COLORS.primaryDark,
     fontSize: 12,
+    lineHeight: 17,
     fontWeight: '900',
   },
   screenTitle: {
     color: COLORS.ink,
-    fontSize: 27,
-    lineHeight: 32,
+    fontSize: 28,
+    lineHeight: 33,
     fontWeight: '900',
     letterSpacing: 0,
   },
@@ -1291,32 +1819,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
-  },
-  segmented: {
-    height: 52,
-    padding: 4,
-    borderRadius: 8,
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-  },
-  segment: {
-    flex: 1,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentActive: {
-    backgroundColor: COLORS.primary,
-  },
-  segmentText: {
-    color: COLORS.muted,
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  segmentTextActive: {
-    color: COLORS.ink,
   },
   formCard: {
     borderRadius: 8,
@@ -1343,61 +1845,123 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.line,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   textArea: {
-    minHeight: 104,
+    minHeight: 112,
     paddingTop: 12,
     textAlignVertical: 'top',
   },
-  formRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  primaryAction: {
-    flex: 1,
-    minHeight: 50,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-  },
-  primaryActionText: {
-    color: COLORS.ink,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  secondaryAction: {
-    flex: 1,
-    minHeight: 50,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.ink,
-  },
-  secondaryActionText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  safetyCard: {
+  trustCard: {
     borderRadius: 8,
     padding: 16,
-    backgroundColor: '#EFFFF6',
+    backgroundColor: '#EFFAF4',
     borderWidth: 1,
     borderColor: '#CDEEDF',
   },
-  safetyTitle: {
+  trustTitle: {
     color: COLORS.ink,
     fontSize: 16,
     fontWeight: '900',
   },
-  safetyText: {
+  trustText: {
     marginTop: 6,
     color: COLORS.muted,
     fontSize: 13,
     lineHeight: 19,
     fontWeight: '700',
+  },
+  offerCard: {
+    borderRadius: 8,
+    padding: 15,
+    gap: 11,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  offerHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  offerAmount: {
+    color: COLORS.ink,
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  offerProvider: {
+    marginTop: 2,
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  offerJob: {
+    color: COLORS.ink,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '900',
+  },
+  offerNoteText: {
+    color: COLORS.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+  },
+  offerMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  offerMeta: {
+    flex: 1,
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  offerActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  declineAction: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  declineActionText: {
+    color: COLORS.ink,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  acceptAction: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.ink,
+  },
+  acceptActionText: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  secondaryWideAction: {
+    minHeight: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surface,
+  },
+  secondaryWideActionText: {
+    color: COLORS.primaryDark,
+    fontSize: 13,
+    fontWeight: '900',
   },
   messageCard: {
     minHeight: 76,
@@ -1412,7 +1976,7 @@ const styles = StyleSheet.create({
   },
   messageCardActive: {
     borderColor: COLORS.primaryDark,
-    backgroundColor: '#FBFFF1',
+    backgroundColor: '#F9FFE8',
   },
   messageAvatar: {
     width: 46,
@@ -1467,7 +2031,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-  chatPreview: {
+  chatPanel: {
     borderRadius: 8,
     padding: 16,
     gap: 10,
@@ -1480,29 +2044,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
   },
-  bubbleIncoming: {
-    maxWidth: '84%',
+  chatSubtitle: {
+    marginTop: -5,
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  bubble: {
+    alignSelf: 'flex-start',
+    maxWidth: '86%',
     borderRadius: 8,
     padding: 12,
     backgroundColor: COLORS.surface,
   },
-  bubbleIncomingText: {
+  bubbleOutgoing: {
+    alignSelf: 'flex-end',
+    backgroundColor: COLORS.primary,
+  },
+  bubbleSystem: {
+    alignSelf: 'center',
+    backgroundColor: '#EEF5FF',
+  },
+  bubbleText: {
     color: COLORS.ink,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '700',
   },
-  bubbleOutgoing: {
-    alignSelf: 'flex-end',
-    maxWidth: '84%',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: COLORS.primary,
-  },
   bubbleOutgoingText: {
     color: COLORS.ink,
-    fontSize: 13,
-    lineHeight: 18,
+    fontWeight: '800',
+  },
+  bubbleSystemText: {
+    color: COLORS.blue,
+    fontSize: 12,
     fontWeight: '800',
   },
   replyRow: {
@@ -1520,7 +2095,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.line,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   sendButton: {
     minWidth: 68,
@@ -1534,103 +2109,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 13,
     fontWeight: '900',
-  },
-  alertCard: {
-    borderRadius: 8,
-    padding: 14,
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-  },
-  alertIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-  },
-  alertIconText: {
-    color: COLORS.ink,
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  alertBody: {
-    flex: 1,
-  },
-  alertTitle: {
-    flex: 1,
-    color: COLORS.ink,
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  alertText: {
-    marginTop: 6,
-    color: COLORS.muted,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: '600',
-  },
-  alertStatus: {
-    minHeight: 26,
-    borderRadius: 13,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.surface,
-  },
-  alertStatusText: {
-    color: COLORS.primaryDark,
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  preferenceCard: {
-    borderRadius: 8,
-    padding: 16,
-    gap: 2,
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.line,
-  },
-  preferenceTitle: {
-    marginBottom: 8,
-    color: COLORS.ink,
-    fontSize: 17,
-    fontWeight: '900',
-  },
-  preferenceRow: {
-    minHeight: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.line,
-  },
-  preferenceLabel: {
-    color: COLORS.ink,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  toggle: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
-    padding: 3,
-    backgroundColor: COLORS.line,
-  },
-  toggleActive: {
-    backgroundColor: COLORS.primary,
-  },
-  toggleKnob: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.white,
-  },
-  toggleKnobActive: {
-    transform: [{ translateX: 20 }],
   },
   profileTop: {
     borderRadius: 8,
@@ -1731,11 +2209,43 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   radiusValue: {
-    minWidth: 48,
+    minWidth: 52,
     color: COLORS.ink,
     fontSize: 14,
     fontWeight: '900',
     textAlign: 'center',
+  },
+  preferenceRow: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.line,
+  },
+  preferenceLabel: {
+    color: COLORS.ink,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  toggle: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    padding: 3,
+    backgroundColor: COLORS.line,
+  },
+  toggleActive: {
+    backgroundColor: COLORS.primary,
+  },
+  toggleKnob: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.white,
+  },
+  toggleKnobActive: {
+    transform: [{ translateX: 20 }],
   },
   scoreGrid: {
     flexDirection: 'row',
@@ -1762,8 +2272,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  setupRow: {
-    minHeight: 52,
+  preferenceCard: {
+    borderRadius: 8,
+    padding: 16,
+    gap: 2,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  preferenceTitle: {
+    marginBottom: 8,
+    color: COLORS.ink,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  bookedRow: {
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1771,16 +2295,74 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.line,
   },
-  setupTitle: {
+  bookedCopy: {
     flex: 1,
+  },
+  setupTitle: {
     color: COLORS.ink,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '900',
   },
-  setupStatus: {
-    color: COLORS.primaryDark,
+  setupMeta: {
+    marginTop: 4,
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  completeAction: {
+    minHeight: 36,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  completeActionText: {
+    color: COLORS.ink,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  emptyInline: {
+    color: COLORS.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+  },
+  alertRow: {
+    minHeight: 70,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.line,
+  },
+  alertMark: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  alertMarkText: {
+    color: COLORS.ink,
     fontSize: 13,
     fontWeight: '900',
+  },
+  alertCopy: {
+    flex: 1,
+  },
+  alertTitle: {
+    color: COLORS.ink,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  alertText: {
+    marginTop: 4,
+    color: COLORS.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600',
   },
   emptyState: {
     borderRadius: 8,
@@ -1849,7 +2431,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     color: '#DCE8D4',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
   },
   tabLabelActive: {
