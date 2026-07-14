@@ -183,6 +183,8 @@ const initialOffers = [
     eta: 'Today, 15:45',
     note: 'Two-person team, eco products included, insured and available today.',
     status: 'Pending',
+    paymentStatus: 'Not paid',
+    paymentMethod: null,
     createdAt: '8 min ago',
   },
   {
@@ -193,6 +195,8 @@ const initialOffers = [
     eta: 'Tomorrow, 09:30',
     note: 'Call-out, seal replacement and pressure check included. Parts billed only if needed.',
     status: 'Pending',
+    paymentStatus: 'Not paid',
+    paymentMethod: null,
     createdAt: '20 min ago',
   },
 ];
@@ -271,11 +275,45 @@ const emptyOfferDraft = {
 };
 
 const tabs = [
-  { id: 'market', label: 'Market', icon: 'M' },
-  { id: 'post', label: 'Post', icon: '+' },
-  { id: 'offers', label: 'Offers', icon: 'O' },
-  { id: 'messages', label: 'Chat', icon: 'C' },
-  { id: 'profile', label: 'Profile', icon: 'P' },
+  { id: 'market', label: 'Market', icon: 'market' },
+  { id: 'post', label: 'Post', icon: 'post' },
+  { id: 'offers', label: 'Offers', icon: 'offers' },
+  { id: 'messages', label: 'Chat', icon: 'chat' },
+  { id: 'profile', label: 'Profile', icon: 'profile' },
+];
+
+const onboardingSteps = [
+  {
+    title: 'Local work, handled end to end',
+    body: 'Post jobs, receive clear offers, book verified providers and keep every update in one place.',
+    metric: '4 live workflows',
+    tone: COLORS.primary,
+  },
+  {
+    title: 'Built for Irish service jobs',
+    body: 'Euro pricing, Ireland-based locations, provider ratings and arrival times are part of the marketplace flow.',
+    metric: 'EUR ready',
+    tone: '#73C7FF',
+  },
+  {
+    title: 'Chat before and after booking',
+    body: 'Every offer can become a conversation, then a booked job, then a completed service record.',
+    metric: 'Secure chat',
+    tone: '#FFB86B',
+  },
+];
+
+const emptyAuthForm = {
+  name: '',
+  email: '',
+  password: '',
+  accountType: 'Customer',
+};
+
+const paymentMethods = [
+  { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
+  { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
+  { id: 'bank', label: 'Irish bank transfer', meta: 'Manual confirmation' },
 ];
 
 function makeId() {
@@ -328,6 +366,11 @@ function statusTone(status) {
 }
 
 export default function App() {
+  const [authStage, setAuthStage] = useState('onboarding');
+  const [authMode, setAuthMode] = useState('signup');
+  const [onboardingIndex, setOnboardingIndex] = useState(0);
+  const [authForm, setAuthForm] = useState(emptyAuthForm);
+  const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('market');
   const [mode, setMode] = useState('Customer');
   const [categories, setCategories] = useState(initialCategories);
@@ -346,6 +389,8 @@ export default function App() {
   const [chatDraft, setChatDraft] = useState('');
   const [serviceRadius, setServiceRadius] = useState(12);
   const [instantBooking, setInstantBooking] = useState(true);
+  const [checkoutOfferId, setCheckoutOfferId] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(paymentMethods[0].id);
   const { width } = useWindowDimensions();
   const compact = width < 390;
 
@@ -360,6 +405,7 @@ export default function App() {
   );
 
   const selectedThread = selectedMessage ? threads[selectedMessage.id] ?? [] : [];
+  const checkoutOffer = offers.find((offer) => offer.id === checkoutOfferId) ?? null;
   const filteredJobs = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -390,6 +436,73 @@ export default function App() {
 
   function updateJobDraft(field, value) {
     setJobDraft((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateAuthForm(field, value) {
+    setAuthForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function openAuth(nextMode) {
+    setAuthMode(nextMode);
+    setAuthStage('auth');
+  }
+
+  function advanceOnboarding() {
+    if (onboardingIndex < onboardingSteps.length - 1) {
+      setOnboardingIndex((current) => current + 1);
+      return;
+    }
+
+    openAuth('signup');
+  }
+
+  function submitAuth() {
+    const name = authForm.name.trim();
+    const email = authForm.email.trim().toLowerCase();
+    const password = authForm.password.trim();
+
+    if (authMode === 'signup' && !name) {
+      showNotice('Add your name', 'Enter your name or business name to create the account.');
+      return;
+    }
+
+    if (!email || !email.includes('@') || password.length < 6) {
+      showNotice('Check your details', 'Use a valid email and a password with at least 6 characters.');
+      return;
+    }
+
+    const user = {
+      name: authMode === 'signup' ? name : email.split('@')[0],
+      email,
+      accountType: authForm.accountType,
+    };
+
+    setCurrentUser(user);
+    setMode(user.accountType);
+    setActiveTab('market');
+    setAuthStage('app');
+    addAlert('Signed in', `${user.name} is active as a ${user.accountType.toLowerCase()}.`, 'Account');
+  }
+
+  function useDemoAccount(accountType = 'Customer') {
+    const user = {
+      name: accountType === 'Customer' ? 'Aoife Kelly' : 'Emerald HomeCare',
+      email: accountType === 'Customer' ? 'aoife@weejob.ie' : 'hello@emeraldhomecare.ie',
+      accountType,
+    };
+
+    setCurrentUser(user);
+    setMode(accountType);
+    setActiveTab('market');
+    setAuthStage('app');
+    addAlert('Demo session started', `${user.name} is active as a ${accountType.toLowerCase()}.`, 'Account');
+  }
+
+  function signOut() {
+    setCurrentUser(null);
+    setAuthMode('login');
+    setAuthStage('auth');
+    setActiveTab('market');
   }
 
   function updateOfferDraft(jobId, field, value) {
@@ -424,7 +537,7 @@ export default function App() {
       budget,
       schedule,
       description,
-      customer: 'Client Account',
+      customer: currentUser?.name ?? 'Client Account',
       status: 'Open',
       urgent: false,
       createdAt: 'Just now',
@@ -474,13 +587,15 @@ export default function App() {
     const offer = {
       id: makeId(),
       jobId: job.id,
-      providerId: provider.id,
-      amount,
-      eta,
-      note,
-      status: 'Pending',
-      createdAt: 'Just now',
-    };
+        providerId: provider.id,
+        amount,
+        eta,
+        note,
+        status: 'Pending',
+        paymentStatus: 'Not paid',
+        paymentMethod: null,
+        createdAt: 'Just now',
+      };
     const conversationId = makeId();
 
     setOffers((current) => [offer, ...current]);
@@ -578,6 +693,7 @@ export default function App() {
         item.id === offer.jobId ? { ...item, status: 'Booked', acceptedOfferId: offer.id } : item
       )
     );
+    setCheckoutOfferId(offer.id);
     addAlert('Offer accepted', `${provider?.name ?? 'Provider'} is booked for ${job?.title ?? 'the job'}.`, 'Booked');
     ensureConversation(offer, 'customer', `Accepted. You are booked for ${job?.schedule ?? 'the requested time'}.`);
   }
@@ -590,6 +706,63 @@ export default function App() {
     );
     addAlert('Offer declined', `${provider?.name ?? 'Provider'} was notified that the offer was declined.`, 'Closed');
     ensureConversation(offer, 'customer', 'Thanks for the offer. I will pass on this one.');
+  }
+
+  function openCheckout(offer) {
+    setCheckoutOfferId(offer.id);
+    setActiveTab('offers');
+  }
+
+  function confirmPayment() {
+    if (!checkoutOffer) {
+      return;
+    }
+
+    const method = paymentMethods.find((item) => item.id === selectedPaymentMethod) ?? paymentMethods[0];
+
+    setOffers((current) =>
+      current.map((offer) =>
+        offer.id === checkoutOffer.id
+          ? { ...offer, paymentStatus: 'Held in escrow', paymentMethod: method.label }
+          : offer
+      )
+    );
+    addAlert('Payment secured', `${formatMoney(checkoutOffer.amount)} is held in escrow via ${method.label}.`, 'Escrow');
+    ensureConversation(
+      checkoutOffer,
+      'system',
+      `Payment of ${formatMoney(checkoutOffer.amount)} is now held in escrow.`
+    );
+  }
+
+  function releasePayment(jobId) {
+    const job = jobs.find((item) => item.id === jobId);
+
+    if (!job?.acceptedOfferId) {
+      return;
+    }
+
+    const offer = offers.find((item) => item.id === job.acceptedOfferId);
+
+    setOffers((current) =>
+      current.map((item) =>
+        item.id === job.acceptedOfferId ? { ...item, paymentStatus: 'Released' } : item
+      )
+    );
+    addAlert('Payment released', `${formatMoney(offer?.amount ?? 0)} was released to the provider.`, 'Paid');
+    if (offer) {
+      ensureConversation(offer, 'system', 'Payment has been released. Thanks for using WEEJOB.');
+    }
+  }
+
+  function refundPayment(offer) {
+    setOffers((current) =>
+      current.map((item) =>
+        item.id === offer.id ? { ...item, paymentStatus: 'Refund requested' } : item
+      )
+    );
+    addAlert('Refund requested', `A refund review was opened for ${formatMoney(offer.amount)}.`, 'Review');
+    ensureConversation(offer, 'system', 'A refund review has been opened for this payment.');
   }
 
   function openOfferConversation(offer) {
@@ -612,7 +785,7 @@ export default function App() {
     );
     setOffers((current) =>
       current.map((item) =>
-        item.id === job?.acceptedOfferId ? { ...item, status: 'Completed' } : item
+        item.id === job?.acceptedOfferId ? { ...item, status: 'Completed', paymentStatus: 'Ready to release' } : item
       )
     );
     addAlert('Job completed', `${job?.title ?? 'The job'} is marked complete. Payment can be released.`, 'Done');
@@ -691,6 +864,35 @@ export default function App() {
     );
   }
 
+  if (authStage === 'onboarding') {
+    return (
+      <OnboardingScreen
+        activeIndex={onboardingIndex}
+        onBack={() => setOnboardingIndex((current) => Math.max(0, current - 1))}
+        onCreateAccount={() => openAuth('signup')}
+        onNext={advanceOnboarding}
+        onSignIn={() => openAuth('login')}
+        onSkip={() => useDemoAccount('Customer')}
+        steps={onboardingSteps}
+      />
+    );
+  }
+
+  if (authStage === 'auth') {
+    return (
+      <AuthScreen
+        authForm={authForm}
+        authMode={authMode}
+        onBack={() => setAuthStage('onboarding')}
+        onDemoCustomer={() => useDemoAccount('Customer')}
+        onDemoProvider={() => useDemoAccount('Provider')}
+        onSubmit={submitAuth}
+        setAuthMode={setAuthMode}
+        updateAuthForm={updateAuthForm}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" backgroundColor={COLORS.surface} />
@@ -748,12 +950,19 @@ export default function App() {
           {activeTab === 'offers' && (
             <OffersScreen
               acceptOffer={acceptOffer}
+              checkoutOffer={checkoutOffer}
+              confirmPayment={confirmPayment}
               declineOffer={declineOffer}
+              openCheckout={openCheckout}
               jobs={jobs}
               offers={offers}
               openOfferConversation={openOfferConversation}
+              paymentMethods={paymentMethods}
               providers={providers}
+              refundPayment={refundPayment}
+              selectedPaymentMethod={selectedPaymentMethod}
               setActiveTab={setActiveTab}
+              setSelectedPaymentMethod={setSelectedPaymentMethod}
             />
           )}
           {activeTab === 'messages' && (
@@ -762,6 +971,7 @@ export default function App() {
               acceptOffer={acceptOffer}
               declineOffer={declineOffer}
               jobs={jobs}
+              openCheckout={openCheckout}
               offers={offers}
               messages={messages}
               openMessage={openMessage}
@@ -775,10 +985,14 @@ export default function App() {
             <ProfileScreen
               alerts={alerts}
               completeJob={completeJob}
+              currentUser={currentUser}
               instantBooking={instantBooking}
               jobs={jobs}
               mode={mode}
+              offers={offers}
+              releasePayment={releasePayment}
               serviceRadius={serviceRadius}
+              signOut={signOut}
               setInstantBooking={setInstantBooking}
               setMode={setMode}
               setServiceRadius={setServiceRadius}
@@ -798,7 +1012,7 @@ export default function App() {
                 style={[styles.tabItem, active && styles.tabItemActive]}
                 onPress={() => setActiveTab(tab.id)}
               >
-                <Text style={[styles.tabIcon, active && styles.tabIconActive]}>{tab.icon}</Text>
+                <TabIcon name={tab.icon} active={active} />
                 <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab.label}</Text>
               </Pressable>
             );
@@ -806,6 +1020,266 @@ export default function App() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+function OnboardingScreen({
+  activeIndex,
+  onBack,
+  onCreateAccount,
+  onNext,
+  onSignIn,
+  onSkip,
+  steps,
+}) {
+  const step = steps[activeIndex];
+  const lastStep = activeIndex === steps.length - 1;
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" backgroundColor={COLORS.surface} />
+      <View style={styles.authShell}>
+        <View style={styles.authHeader}>
+          <View>
+            <Text style={styles.authBrand}>WEEJOB</Text>
+            <Text style={styles.authLocation}>Ireland local services</Text>
+          </View>
+          <Pressable style={styles.authGhostButton} onPress={onSignIn}>
+            <Text style={styles.authGhostButtonText}>Sign in</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.onboardingArt}>
+          <View style={[styles.onboardingOrb, { backgroundColor: step.tone }]} />
+          <View style={styles.onboardingCardLarge}>
+            <Text style={styles.onboardingMetric}>{step.metric}</Text>
+            <Text style={styles.onboardingMetricLabel}>Marketplace ready</Text>
+          </View>
+          <View style={styles.onboardingCardSmall}>
+            <Text style={styles.onboardingCheck}>OK</Text>
+          </View>
+        </View>
+
+        <View style={styles.authCopy}>
+          <Text style={styles.authTitle}>{step.title}</Text>
+          <Text style={styles.authText}>{step.body}</Text>
+        </View>
+
+        <View style={styles.onboardingDots}>
+          {steps.map((item, index) => (
+            <View
+              key={item.title}
+              style={[styles.onboardingDot, index === activeIndex && styles.onboardingDotActive]}
+            />
+          ))}
+        </View>
+
+        <View style={styles.authActions}>
+          <Pressable style={styles.primaryActionLarge} onPress={onNext}>
+            <Text style={styles.primaryActionText}>{lastStep ? 'Create account' : 'Continue'}</Text>
+          </Pressable>
+          <View style={styles.authActionRow}>
+            <Pressable
+              style={[styles.secondaryAction, activeIndex === 0 && styles.disabledAction]}
+              onPress={onBack}
+            >
+              <Text style={styles.secondaryActionText}>Back</Text>
+            </Pressable>
+            <Pressable style={styles.secondaryAction} onPress={onSkip}>
+              <Text style={styles.secondaryActionText}>Try demo</Text>
+            </Pressable>
+          </View>
+          {lastStep && (
+            <Pressable style={styles.authTextButton} onPress={onCreateAccount}>
+              <Text style={styles.authTextButtonLabel}>Start sign up</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function AuthScreen({
+  authForm,
+  authMode,
+  onBack,
+  onDemoCustomer,
+  onDemoProvider,
+  onSubmit,
+  setAuthMode,
+  updateAuthForm,
+}) {
+  const signingUp = authMode === 'signup';
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" backgroundColor={COLORS.surface} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.authShell}
+      >
+        <View style={styles.authHeader}>
+          <View>
+            <Text style={styles.authBrand}>WEEJOB</Text>
+            <Text style={styles.authLocation}>Secure marketplace access</Text>
+          </View>
+          <Pressable style={styles.authGhostButton} onPress={onBack}>
+            <Text style={styles.authGhostButtonText}>Intro</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.authCopy}>
+          <Text style={styles.authTitle}>{signingUp ? 'Create your account' : 'Welcome back'}</Text>
+          <Text style={styles.authText}>
+            {signingUp
+              ? 'Choose your role, add your details, then enter the marketplace.'
+              : 'Sign in to continue managing jobs, offers and messages.'}
+          </Text>
+        </View>
+
+        <View style={styles.authSegmented}>
+          {['login', 'signup'].map((item) => {
+            const active = authMode === item;
+            return (
+              <Pressable
+                key={item}
+                style={[styles.authSegment, active && styles.authSegmentActive]}
+                onPress={() => setAuthMode(item)}
+              >
+                <Text style={[styles.authSegmentText, active && styles.authSegmentTextActive]}>
+                  {item === 'login' ? 'Login' : 'Sign up'}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.formCard}>
+          {signingUp && (
+            <LabeledInput
+              label="Name or business"
+              placeholder="Example: Aoife Kelly"
+              value={authForm.name}
+              onChangeText={(value) => updateAuthForm('name', value)}
+            />
+          )}
+          <LabeledInput
+            label="Email"
+            placeholder="you@example.ie"
+            keyboardType="email-address"
+            value={authForm.email}
+            onChangeText={(value) => updateAuthForm('email', value)}
+          />
+          <AuthPasswordInput
+            value={authForm.password}
+            onChangeText={(value) => updateAuthForm('password', value)}
+          />
+          {signingUp && (
+            <View style={styles.fieldGroup}>
+              <Text style={styles.inputLabel}>Account type</Text>
+              <View style={styles.modeRow}>
+                {['Customer', 'Provider'].map((item) => (
+                  <Pressable
+                    key={item}
+                    style={[styles.modeChip, authForm.accountType === item && styles.modeChipActive]}
+                    onPress={() => updateAuthForm('accountType', item)}
+                  >
+                    <Text
+                      style={[
+                        styles.modeChipText,
+                        authForm.accountType === item && styles.modeChipTextActive,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
+          <Pressable style={styles.primaryActionLarge} onPress={onSubmit}>
+            <Text style={styles.primaryActionText}>{signingUp ? 'Create account' : 'Login'}</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.demoActions}>
+          <Pressable style={styles.secondaryAction} onPress={onDemoCustomer}>
+            <Text style={styles.secondaryActionText}>Demo customer</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryAction} onPress={onDemoProvider}>
+            <Text style={styles.secondaryActionText}>Demo provider</Text>
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+function AuthPasswordInput({ onChangeText, value }) {
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.inputLabel}>Password</Text>
+      <TextInput
+        placeholder="At least 6 characters"
+        placeholderTextColor={COLORS.muted}
+        secureTextEntry
+        value={value}
+        onChangeText={onChangeText}
+        style={styles.input}
+      />
+    </View>
+  );
+}
+
+function TabIcon({ active, name }) {
+  const color = active ? COLORS.ink : '#DCE8D4';
+
+  if (name === 'post') {
+    return (
+      <View style={styles.tabIconFrame}>
+        <View style={[styles.iconLineHorizontal, { backgroundColor: color }]} />
+        <View style={[styles.iconLineVertical, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+
+  if (name === 'offers') {
+    return (
+      <View style={styles.tabIconFrame}>
+        <View style={[styles.iconTicket, { borderColor: color }]}>
+          <View style={[styles.iconTicketDot, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (name === 'chat') {
+    return (
+      <View style={styles.tabIconFrame}>
+        <View style={[styles.iconChatBubble, { borderColor: color }]}>
+          <View style={[styles.iconChatLine, { backgroundColor: color }]} />
+        </View>
+      </View>
+    );
+  }
+
+  if (name === 'profile') {
+    return (
+      <View style={styles.tabIconFrame}>
+        <View style={[styles.iconProfileHead, { borderColor: color }]} />
+        <View style={[styles.iconProfileBody, { borderColor: color }]} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.tabIconFrame}>
+      <View style={[styles.iconGridCell, { borderColor: color }]} />
+      <View style={[styles.iconGridCell, { borderColor: color }]} />
+      <View style={[styles.iconGridCell, { borderColor: color }]} />
+      <View style={[styles.iconGridCell, { borderColor: color }]} />
+    </View>
   );
 }
 
@@ -1189,12 +1663,19 @@ function LabeledInput({ keyboardType, label, multiline, onChangeText, placeholde
 
 function OffersScreen({
   acceptOffer,
+  checkoutOffer,
+  confirmPayment,
   declineOffer,
   jobs,
+  openCheckout,
   offers,
   openOfferConversation,
+  paymentMethods,
   providers,
+  refundPayment,
+  selectedPaymentMethod,
   setActiveTab,
+  setSelectedPaymentMethod,
 }) {
   const sortedOffers = [...offers].sort((a, b) => {
     if (a.status === b.status) {
@@ -1207,6 +1688,17 @@ function OffersScreen({
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <Text style={styles.screenTitle}>Offers</Text>
       <Text style={styles.screenText}>Review pricing, arrival time and provider notes before booking.</Text>
+
+      {checkoutOffer && (
+        <PaymentPanel
+          confirmPayment={confirmPayment}
+          job={jobs.find((item) => item.id === checkoutOffer.jobId)}
+          offer={checkoutOffer}
+          paymentMethods={paymentMethods}
+          selectedPaymentMethod={selectedPaymentMethod}
+          setSelectedPaymentMethod={setSelectedPaymentMethod}
+        />
+      )}
 
       <View style={styles.stack}>
         {sortedOffers.length > 0 ? (
@@ -1230,6 +1722,10 @@ function OffersScreen({
                   <Text style={styles.offerMeta}>Arrival: {offer.eta}</Text>
                   <Text style={styles.offerMeta}>{offer.createdAt}</Text>
                 </View>
+                <View style={styles.paymentStatusRow}>
+                  <Text style={styles.paymentStatusLabel}>Payment</Text>
+                  <Text style={styles.paymentStatusValue}>{offer.paymentStatus}</Text>
+                </View>
                 {pending ? (
                   <View style={styles.offerActions}>
                     <Pressable style={styles.messageOfferAction} onPress={() => openOfferConversation(offer)}>
@@ -1245,6 +1741,16 @@ function OffersScreen({
                 ) : (
                   <Pressable style={styles.secondaryWideAction} onPress={() => openOfferConversation(offer)}>
                     <Text style={styles.secondaryWideActionText}>Open conversation</Text>
+                  </Pressable>
+                )}
+                {offer.status === 'Accepted' && offer.paymentStatus === 'Not paid' && (
+                  <Pressable style={styles.primaryActionLarge} onPress={() => openCheckout(offer)}>
+                    <Text style={styles.primaryActionText}>Pay into escrow</Text>
+                  </Pressable>
+                )}
+                {offer.paymentStatus === 'Held in escrow' && (
+                  <Pressable style={styles.secondaryWideAction} onPress={() => refundPayment(offer)}>
+                    <Text style={styles.secondaryWideActionText}>Request refund review</Text>
                   </Pressable>
                 )}
               </View>
@@ -1263,6 +1769,56 @@ function OffersScreen({
   );
 }
 
+function PaymentPanel({
+  confirmPayment,
+  job,
+  offer,
+  paymentMethods,
+  selectedPaymentMethod,
+  setSelectedPaymentMethod,
+}) {
+  const paid = offer.paymentStatus !== 'Not paid';
+
+  return (
+    <View style={styles.paymentPanel}>
+      <View style={styles.paymentHeader}>
+        <View>
+          <Text style={styles.paymentEyebrow}>Secure checkout</Text>
+          <Text style={styles.paymentTitle}>{formatMoney(offer.amount)}</Text>
+        </View>
+        <StatusPill status={offer.paymentStatus} />
+      </View>
+      <Text style={styles.paymentText}>
+        {job?.title ?? 'Selected job'} payment is held until the customer marks the work complete.
+      </Text>
+      <View style={styles.paymentMethods}>
+        {paymentMethods.map((method) => {
+          const active = selectedPaymentMethod === method.id;
+
+          return (
+            <Pressable
+              key={method.id}
+              style={[styles.paymentMethod, active && styles.paymentMethodActive]}
+              onPress={() => setSelectedPaymentMethod(method.id)}
+            >
+              <Text style={[styles.paymentMethodLabel, active && styles.paymentMethodLabelActive]}>
+                {method.label}
+              </Text>
+              <Text style={styles.paymentMethodMeta}>{method.meta}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Pressable
+        style={[styles.primaryActionLarge, paid && styles.disabledAction]}
+        onPress={confirmPayment}
+      >
+        <Text style={styles.primaryActionText}>{paid ? 'Payment secured' : 'Confirm payment'}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function MessagesScreen({
   acceptOffer,
   chatDraft,
@@ -1270,6 +1826,7 @@ function MessagesScreen({
   jobs,
   messages,
   openMessage,
+  openCheckout,
   offers,
   selectedMessage,
   selectedThread,
@@ -1314,14 +1871,15 @@ function MessagesScreen({
         <Text style={styles.chatTitle}>{selectedMessage?.participant ?? 'Conversation'}</Text>
         <Text style={styles.chatSubtitle}>{selectedJob?.title ?? 'Select a conversation'}</Text>
         {selectedOffer && (
-          <View style={styles.chatOfferPanel}>
-            <View>
-              <Text style={styles.chatOfferAmount}>{formatMoney(selectedOffer.amount)}</Text>
-              <Text style={styles.chatOfferMeta}>Arrival: {selectedOffer.eta}</Text>
+            <View style={styles.chatOfferPanel}>
+              <View>
+                <Text style={styles.chatOfferAmount}>{formatMoney(selectedOffer.amount)}</Text>
+                <Text style={styles.chatOfferMeta}>Arrival: {selectedOffer.eta}</Text>
+                <Text style={styles.chatOfferMeta}>Payment: {selectedOffer.paymentStatus}</Text>
+              </View>
+              <StatusPill status={selectedOffer.status} />
             </View>
-            <StatusPill status={selectedOffer.status} />
-          </View>
-        )}
+          )}
         {selectedOffer?.status === 'Pending' && (
           <View style={styles.chatOfferActions}>
             <Pressable style={styles.declineAction} onPress={() => declineOffer(selectedOffer)}>
@@ -1331,6 +1889,11 @@ function MessagesScreen({
               <Text style={styles.acceptActionText}>Accept</Text>
             </Pressable>
           </View>
+        )}
+        {selectedOffer?.status === 'Accepted' && selectedOffer.paymentStatus === 'Not paid' && (
+          <Pressable style={styles.primaryActionLarge} onPress={() => openCheckout(selectedOffer)}>
+            <Text style={styles.primaryActionText}>Pay into escrow</Text>
+          </Pressable>
         )}
         {selectedThread.map((message) => {
           const outgoing = message.from === 'customer';
@@ -1378,16 +1941,21 @@ function MessagesScreen({
 function ProfileScreen({
   alerts,
   completeJob,
+  currentUser,
   instantBooking,
   jobs,
   mode,
+  offers,
+  releasePayment,
   serviceRadius,
+  signOut,
   setInstantBooking,
   setMode,
   setServiceRadius,
   stats,
 }) {
   const bookedJobs = jobs.filter((job) => job.status === 'Booked');
+  const completedJobs = jobs.filter((job) => job.status === 'Completed');
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -1396,8 +1964,10 @@ function ProfileScreen({
           <Text style={styles.profileAvatarText}>WJ</Text>
         </View>
         <View style={styles.profileCopy}>
-          <Text style={styles.profileName}>WEEJOB Ireland</Text>
-          <Text style={styles.profileMeta}>Verified customer and provider account</Text>
+          <Text style={styles.profileName}>{currentUser?.name ?? 'WEEJOB Ireland'}</Text>
+          <Text style={styles.profileMeta}>
+            {currentUser?.email ?? 'Verified customer and provider account'}
+          </Text>
         </View>
       </View>
 
@@ -1437,6 +2007,9 @@ function ProfileScreen({
           title="Instant booking eligible"
           onPress={() => setInstantBooking((current) => !current)}
         />
+        <Pressable style={styles.signOutAction} onPress={signOut}>
+          <Text style={styles.signOutActionText}>Sign out</Text>
+        </Pressable>
       </View>
 
       <View style={styles.scoreGrid}>
@@ -1461,6 +2034,37 @@ function ProfileScreen({
           ))
         ) : (
           <Text style={styles.emptyInline}>Accepted offers will appear here.</Text>
+        )}
+      </View>
+
+      <View style={styles.preferenceCard}>
+        <Text style={styles.preferenceTitle}>Payment release</Text>
+        {completedJobs.length > 0 ? (
+          completedJobs.map((job) => {
+            const offer = offers.find((item) => item.id === job.acceptedOfferId);
+            const releasable = offer?.paymentStatus === 'Ready to release';
+
+            return (
+              <View key={job.id} style={styles.bookedRow}>
+                <View style={styles.bookedCopy}>
+                  <Text style={styles.setupTitle}>{job.title}</Text>
+                  <Text style={styles.setupMeta}>
+                    {offer ? `${formatMoney(offer.amount)} - ${offer.paymentStatus}` : 'No payment linked'}
+                  </Text>
+                </View>
+                <Pressable
+                  style={[styles.completeAction, !releasable && styles.disabledAction]}
+                  onPress={() => releasable && releasePayment(job.id)}
+                >
+                  <Text style={styles.completeActionText}>
+                    {offer?.paymentStatus === 'Released' ? 'Released' : 'Release'}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })
+        ) : (
+          <Text style={styles.emptyInline}>Completed jobs with escrow payments will appear here.</Text>
         )}
       </View>
 
@@ -1521,6 +2125,178 @@ const styles = StyleSheet.create({
   },
   appShell: {
     flex: 1,
+  },
+  authShell: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 24,
+    gap: 18,
+    backgroundColor: COLORS.surface,
+  },
+  authHeader: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  authBrand: {
+    color: COLORS.ink,
+    fontSize: 25,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  authLocation: {
+    marginTop: 3,
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  authGhostButton: {
+    minHeight: 40,
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  authGhostButtonText: {
+    color: COLORS.ink,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  onboardingArt: {
+    minHeight: 238,
+    borderRadius: 8,
+    padding: 18,
+    justifyContent: 'flex-end',
+    backgroundColor: COLORS.ink,
+    overflow: 'hidden',
+  },
+  onboardingOrb: {
+    position: 'absolute',
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    right: -38,
+    top: -26,
+  },
+  onboardingCardLarge: {
+    width: '72%',
+    minHeight: 112,
+    borderRadius: 8,
+    padding: 16,
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+  },
+  onboardingCardSmall: {
+    position: 'absolute',
+    right: 18,
+    bottom: 28,
+    width: 74,
+    height: 74,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  onboardingCheck: {
+    color: COLORS.ink,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  onboardingMetric: {
+    color: COLORS.ink,
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  onboardingMetricLabel: {
+    marginTop: 6,
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  authCopy: {
+    gap: 8,
+  },
+  authTitle: {
+    color: COLORS.ink,
+    fontSize: 31,
+    lineHeight: 36,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  authText: {
+    color: COLORS.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '700',
+  },
+  onboardingDots: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  onboardingDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: COLORS.line,
+  },
+  onboardingDotActive: {
+    width: 28,
+    backgroundColor: COLORS.ink,
+  },
+  authActions: {
+    marginTop: 'auto',
+    gap: 10,
+  },
+  authActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  authTextButton: {
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authTextButtonLabel: {
+    color: COLORS.primaryDark,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  authSegmented: {
+    height: 52,
+    padding: 4,
+    borderRadius: 8,
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  authSegment: {
+    flex: 1,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authSegmentActive: {
+    backgroundColor: COLORS.primary,
+  },
+  authSegmentText: {
+    color: COLORS.muted,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  authSegmentTextActive: {
+    color: COLORS.ink,
+  },
+  demoActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   header: {
     minHeight: 78,
@@ -1891,6 +2667,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
   },
+  disabledAction: {
+    opacity: 0.45,
+  },
   offerComposer: {
     borderTopWidth: 1,
     borderTopColor: COLORS.line,
@@ -2172,6 +2951,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
+  paymentStatusRow: {
+    minHeight: 38,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    backgroundColor: COLORS.surface,
+  },
+  paymentStatusLabel: {
+    color: COLORS.muted,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  paymentStatusValue: {
+    color: COLORS.ink,
+    fontSize: 12,
+    fontWeight: '900',
+  },
   offerActions: {
     flexDirection: 'row',
     gap: 10,
@@ -2230,6 +3029,66 @@ const styles = StyleSheet.create({
     color: COLORS.primaryDark,
     fontSize: 13,
     fontWeight: '900',
+  },
+  paymentPanel: {
+    borderRadius: 8,
+    padding: 16,
+    gap: 12,
+    backgroundColor: COLORS.ink,
+  },
+  paymentHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  paymentEyebrow: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  paymentTitle: {
+    marginTop: 4,
+    color: COLORS.white,
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: 0,
+  },
+  paymentText: {
+    color: '#DCE8D4',
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+  },
+  paymentMethods: {
+    gap: 8,
+  },
+  paymentMethod: {
+    minHeight: 58,
+    borderRadius: 8,
+    padding: 12,
+    justifyContent: 'center',
+    backgroundColor: '#26351F',
+    borderWidth: 1,
+    borderColor: '#3D4D35',
+  },
+  paymentMethodActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: '#314320',
+  },
+  paymentMethodLabel: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  paymentMethodLabelActive: {
+    color: COLORS.primary,
+  },
+  paymentMethodMeta: {
+    marginTop: 3,
+    color: '#DCE8D4',
+    fontSize: 12,
+    fontWeight: '700',
   },
   messageCard: {
     minHeight: 76,
@@ -2615,6 +3474,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
+  signOutAction: {
+    minHeight: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFECE9',
+    borderWidth: 1,
+    borderColor: '#FFD0C9',
+  },
+  signOutActionText: {
+    color: COLORS.red,
+    fontSize: 13,
+    fontWeight: '900',
+  },
   emptyInline: {
     color: COLORS.muted,
     fontSize: 13,
@@ -2714,13 +3587,73 @@ const styles = StyleSheet.create({
   tabItemActive: {
     backgroundColor: COLORS.primary,
   },
-  tabIcon: {
-    color: '#DCE8D4',
-    fontSize: 14,
-    fontWeight: '900',
+  tabIconFrame: {
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 2,
   },
-  tabIconActive: {
-    color: COLORS.ink,
+  iconGridCell: {
+    width: 8,
+    height: 8,
+    borderRadius: 2,
+    borderWidth: 2,
+  },
+  iconLineHorizontal: {
+    position: 'absolute',
+    width: 18,
+    height: 3,
+    borderRadius: 2,
+  },
+  iconLineVertical: {
+    position: 'absolute',
+    width: 3,
+    height: 18,
+    borderRadius: 2,
+  },
+  iconTicket: {
+    width: 19,
+    height: 15,
+    borderRadius: 4,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconTicketDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  iconChatBubble: {
+    width: 20,
+    height: 16,
+    borderRadius: 5,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconChatLine: {
+    width: 10,
+    height: 2,
+    borderRadius: 1,
+  },
+  iconProfileHead: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    borderWidth: 2,
+  },
+  iconProfileBody: {
+    marginTop: 2,
+    width: 17,
+    height: 8,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    borderWidth: 2,
+    borderBottomWidth: 0,
   },
   tabLabel: {
     color: '#DCE8D4',
