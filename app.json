@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "WEEJOB",
-    "slug": "weejob",
+    "slug": "weej",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,6 +20,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ad07058d-2177-456b-a2af-3e77c4a6ad7a"
+      }
+    },
+    "owner": "olamilekan2580s-team"
   }
 }
