@@ -1,11 +1,12 @@
-# WEEJOB
+# OpenWork
 
-WEEJOB is a cross-platform Expo React Native app for an Ireland-focused local services marketplace. Customers post jobs, verified providers send offers, customers accept or decline offers, and both sides coordinate through job-linked messaging.
+OpenWork is a cross-platform Expo React Native app for a global local-services marketplace. Customers post jobs, choose their country and preferred currency at signup, receive offers from verified providers, accept or decline those offers, and coordinate through job-linked messaging.
 
 ## Current App
 
-- Ireland-localised marketplace with Dublin, Cork and Galway sample data.
-- Euro pricing using Irish locale currency formatting.
+- Global marketplace positioning with country selection at signup.
+- Preferred-currency pricing throughout the app.
+- Ireland sample data included for demo marketplace content.
 - Customer and provider mode switching.
 - Job posting with required-field validation.
 - Provider offer composer on open jobs.

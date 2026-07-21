@@ -274,6 +274,33 @@ const emptyOfferDraft = {
   note: '',
 };
 
+const countryOptions = [
+  { code: 'IE', label: 'Ireland', locale: 'en-IE', currency: 'EUR', cityHint: 'Dublin 2, Cork City, Galway...' },
+  { code: 'US', label: 'United States', locale: 'en-US', currency: 'USD', cityHint: 'Brooklyn, Austin, Seattle...' },
+  { code: 'GB', label: 'United Kingdom', locale: 'en-GB', currency: 'GBP', cityHint: 'Shoreditch, Manchester, Leeds...' },
+  { code: 'NG', label: 'Nigeria', locale: 'en-NG', currency: 'NGN', cityHint: 'Yaba, Abuja, Port Harcourt...' },
+  { code: 'CA', label: 'Canada', locale: 'en-CA', currency: 'CAD', cityHint: 'Toronto, Vancouver, Calgary...' },
+  { code: 'AU', label: 'Australia', locale: 'en-AU', currency: 'AUD', cityHint: 'Sydney, Melbourne, Perth...' },
+];
+
+const currencyOptions = [
+  { code: 'EUR', label: 'Euro' },
+  { code: 'USD', label: 'US Dollar' },
+  { code: 'GBP', label: 'British Pound' },
+  { code: 'NGN', label: 'Naira' },
+  { code: 'CAD', label: 'Canadian Dollar' },
+  { code: 'AUD', label: 'Australian Dollar' },
+];
+
+const currencyLocales = {
+  EUR: 'en-IE',
+  USD: 'en-US',
+  GBP: 'en-GB',
+  NGN: 'en-NG',
+  CAD: 'en-CA',
+  AUD: 'en-AU',
+};
+
 const tabs = [
   { id: 'market', label: 'Market', icon: 'market' },
   { id: 'post', label: 'Post', icon: 'post' },
@@ -290,9 +317,9 @@ const onboardingSteps = [
     tone: COLORS.primary,
   },
   {
-    title: 'Built for Irish service jobs',
-    body: 'Euro pricing, Ireland-based locations, provider ratings and arrival times are part of the marketplace flow.',
-    metric: 'EUR ready',
+    title: 'Built for country and currency choice',
+    body: 'Choose your market, price work in your preferred currency and keep the same booking flow anywhere.',
+    metric: 'Multi-currency',
     tone: '#73C7FF',
   },
   {
@@ -308,24 +335,48 @@ const emptyAuthForm = {
   email: '',
   password: '',
   accountType: 'Customer',
+  countryCode: countryOptions[0].code,
+  currency: countryOptions[0].currency,
 };
 
 const paymentMethods = [
   { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
   { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
-  { id: 'bank', label: 'Irish bank transfer', meta: 'Manual confirmation' },
+  { id: 'bank', label: 'Bank transfer', meta: 'Manual confirmation' },
 ];
 
 function makeId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
 
-function formatMoney(value) {
-  return new Intl.NumberFormat('en-IE', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(Number(value) || 0);
+function getCountryOption(countryCode) {
+  return countryOptions.find((option) => option.code === countryCode) ?? countryOptions[0];
+}
+
+function getPricingConfig(countryCode, currency) {
+  const country = getCountryOption(countryCode);
+
+  return {
+    country,
+    currency: currency || country.currency,
+    locale: country.locale || currencyLocales[currency] || 'en-US',
+  };
+}
+
+function formatMoney(value, { currency = 'EUR', locale = 'en-IE' } = {}) {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(Number(value) || 0);
+  } catch {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(Number(value) || 0);
+  }
 }
 
 function parseAmount(value) {
@@ -393,6 +444,12 @@ export default function App() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(paymentMethods[0].id);
   const { width } = useWindowDimensions();
   const compact = width < 390;
+  const pricingConfig = useMemo(
+    () => getPricingConfig(currentUser?.countryCode ?? authForm.countryCode, currentUser?.currency ?? authForm.currency),
+    [authForm.countryCode, authForm.currency, currentUser]
+  );
+  const formatPrice = (value) => formatMoney(value, pricingConfig);
+  const activeCountry = pricingConfig.country;
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
@@ -442,6 +499,19 @@ export default function App() {
     setAuthForm((current) => ({ ...current, [field]: value }));
   }
 
+  function updateCountry(countryCode) {
+    const nextCountry = getCountryOption(countryCode);
+
+    setAuthForm((current) => ({
+      ...current,
+      countryCode,
+      currency:
+        current.currency === getCountryOption(current.countryCode).currency || !current.currency
+          ? nextCountry.currency
+          : current.currency,
+    }));
+  }
+
   function openAuth(nextMode) {
     setAuthMode(nextMode);
     setAuthStage('auth');
@@ -471,31 +541,50 @@ export default function App() {
       return;
     }
 
+    const country = getCountryOption(authForm.countryCode);
+
     const user = {
       name: authMode === 'signup' ? name : email.split('@')[0],
       email,
       accountType: authForm.accountType,
+      countryCode: country.code,
+      countryLabel: country.label,
+      currency: authForm.currency,
+      locale: country.locale,
     };
 
     setCurrentUser(user);
     setMode(user.accountType);
     setActiveTab('market');
     setAuthStage('app');
-    addAlert('Signed in', `${user.name} is active as a ${user.accountType.toLowerCase()}.`, 'Account');
+    addAlert(
+      'Signed in',
+      `${user.name} is active as a ${user.accountType.toLowerCase()} in ${user.countryLabel} with ${user.currency} pricing.`,
+      'Account'
+    );
   }
 
   function useDemoAccount(accountType = 'Customer') {
+    const country = getCountryOption(authForm.countryCode);
     const user = {
       name: accountType === 'Customer' ? 'Aoife Kelly' : 'Emerald HomeCare',
-      email: accountType === 'Customer' ? 'aoife@weejob.ie' : 'hello@emeraldhomecare.ie',
+      email: accountType === 'Customer' ? 'aoife@openwork.app' : 'hello@emeraldhomecare.app',
       accountType,
+      countryCode: country.code,
+      countryLabel: country.label,
+      currency: authForm.currency,
+      locale: country.locale,
     };
 
     setCurrentUser(user);
     setMode(accountType);
     setActiveTab('market');
     setAuthStage('app');
-    addAlert('Demo session started', `${user.name} is active as a ${accountType.toLowerCase()}.`, 'Account');
+    addAlert(
+      'Demo session started',
+      `${user.name} is active as a ${accountType.toLowerCase()} in ${user.countryLabel} with ${user.currency} pricing.`,
+      'Account'
+    );
   }
 
   function signOut() {
@@ -617,7 +706,7 @@ export default function App() {
         {
           id: makeId(),
           from: 'provider',
-          text: `${formatMoney(amount)} offer: ${note}`,
+          text: `${formatPrice(amount)} offer: ${note}`,
         },
       ],
     }));
@@ -727,11 +816,11 @@ export default function App() {
           : offer
       )
     );
-    addAlert('Payment secured', `${formatMoney(checkoutOffer.amount)} is held in escrow via ${method.label}.`, 'Escrow');
+    addAlert('Payment secured', `${formatPrice(checkoutOffer.amount)} is held in escrow via ${method.label}.`, 'Escrow');
     ensureConversation(
       checkoutOffer,
       'system',
-      `Payment of ${formatMoney(checkoutOffer.amount)} is now held in escrow.`
+      `Payment of ${formatPrice(checkoutOffer.amount)} is now held in escrow.`
     );
   }
 
@@ -749,9 +838,9 @@ export default function App() {
         item.id === job.acceptedOfferId ? { ...item, paymentStatus: 'Released' } : item
       )
     );
-    addAlert('Payment released', `${formatMoney(offer?.amount ?? 0)} was released to the provider.`, 'Paid');
+    addAlert('Payment released', `${formatPrice(offer?.amount ?? 0)} was released to the provider.`, 'Paid');
     if (offer) {
-      ensureConversation(offer, 'system', 'Payment has been released. Thanks for using WEEJOB.');
+      ensureConversation(offer, 'system', 'Payment has been released. Thanks for using OpenWork.');
     }
   }
 
@@ -761,7 +850,7 @@ export default function App() {
         item.id === offer.id ? { ...item, paymentStatus: 'Refund requested' } : item
       )
     );
-    addAlert('Refund requested', `A refund review was opened for ${formatMoney(offer.amount)}.`, 'Review');
+    addAlert('Refund requested', `A refund review was opened for ${formatPrice(offer.amount)}.`, 'Review');
     ensureConversation(offer, 'system', 'A refund review has been opened for this payment.');
   }
 
@@ -887,7 +976,10 @@ export default function App() {
         onDemoCustomer={() => useDemoAccount('Customer')}
         onDemoProvider={() => useDemoAccount('Provider')}
         onSubmit={submitAuth}
+        countryOptions={countryOptions}
+        currencyOptions={currencyOptions}
         setAuthMode={setAuthMode}
+        updateCountry={updateCountry}
         updateAuthForm={updateAuthForm}
       />
     );
@@ -902,8 +994,8 @@ export default function App() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.brand}>WEEJOB</Text>
-            <Text style={styles.location}>Ireland local services</Text>
+            <Text style={styles.brand}>OpenWork</Text>
+            <Text style={styles.location}>{`${currentUser?.countryLabel ?? 'Global'} local services - ${pricingConfig.currency}`}</Text>
           </View>
           <View style={styles.headerActions}>
             <Pressable
@@ -937,12 +1029,17 @@ export default function App() {
               setSelectedJobId={setSelectedJobId}
               sendOffer={sendOffer}
               stats={stats}
+              formatMoney={formatPrice}
+              marketLabel={currentUser?.countryLabel ?? activeCountry.label}
               updateOfferDraft={updateOfferDraft}
             />
           )}
           {activeTab === 'post' && (
             <PostScreen
+              countryLabel={currentUser?.countryLabel ?? activeCountry.label}
+              currencyCode={pricingConfig.currency}
               jobDraft={jobDraft}
+              locationHint={activeCountry.cityHint}
               publishJob={publishJob}
               updateJobDraft={updateJobDraft}
             />
@@ -963,6 +1060,7 @@ export default function App() {
               selectedPaymentMethod={selectedPaymentMethod}
               setActiveTab={setActiveTab}
               setSelectedPaymentMethod={setSelectedPaymentMethod}
+              formatMoney={formatPrice}
             />
           )}
           {activeTab === 'messages' && (
@@ -979,6 +1077,7 @@ export default function App() {
               selectedThread={selectedThread}
               sendMessage={sendMessage}
               setChatDraft={setChatDraft}
+              formatMoney={formatPrice}
             />
           )}
           {activeTab === 'profile' && (
@@ -997,6 +1096,7 @@ export default function App() {
               setMode={setMode}
               setServiceRadius={setServiceRadius}
               stats={stats}
+              formatMoney={formatPrice}
             />
           )}
         </View>
@@ -1041,8 +1141,8 @@ function OnboardingScreen({
       <View style={styles.authShell}>
         <View style={styles.authHeader}>
           <View>
-            <Text style={styles.authBrand}>WEEJOB</Text>
-            <Text style={styles.authLocation}>Ireland local services</Text>
+            <Text style={styles.authBrand}>OpenWork</Text>
+            <Text style={styles.authLocation}>Global local services marketplace</Text>
           </View>
           <Pressable style={styles.authGhostButton} onPress={onSignIn}>
             <Text style={styles.authGhostButtonText}>Sign in</Text>
@@ -1103,11 +1203,14 @@ function OnboardingScreen({
 function AuthScreen({
   authForm,
   authMode,
+  countryOptions,
+  currencyOptions,
   onBack,
   onDemoCustomer,
   onDemoProvider,
   onSubmit,
   setAuthMode,
+  updateCountry,
   updateAuthForm,
 }) {
   const signingUp = authMode === 'signup';
@@ -1121,7 +1224,7 @@ function AuthScreen({
       >
         <View style={styles.authHeader}>
           <View>
-            <Text style={styles.authBrand}>WEEJOB</Text>
+            <Text style={styles.authBrand}>OpenWork</Text>
             <Text style={styles.authLocation}>Secure marketplace access</Text>
           </View>
           <Pressable style={styles.authGhostButton} onPress={onBack}>
@@ -1133,7 +1236,7 @@ function AuthScreen({
           <Text style={styles.authTitle}>{signingUp ? 'Create your account' : 'Welcome back'}</Text>
           <Text style={styles.authText}>
             {signingUp
-              ? 'Choose your role, add your details, then enter the marketplace.'
+              ? 'Choose your role, country and preferred currency, then enter the marketplace.'
               : 'Sign in to continue managing jobs, offers and messages.'}
           </Text>
         </View>
@@ -1166,7 +1269,7 @@ function AuthScreen({
           )}
           <LabeledInput
             label="Email"
-            placeholder="you@example.ie"
+            placeholder="you@example.com"
             keyboardType="email-address"
             value={authForm.email}
             onChangeText={(value) => updateAuthForm('email', value)}
@@ -1196,6 +1299,45 @@ function AuthScreen({
                   </Pressable>
                 ))}
               </View>
+            </View>
+          )}
+          {signingUp && (
+            <View style={styles.fieldGroup}>
+              <Text style={styles.inputLabel}>Country</Text>
+              <View style={styles.optionGrid}>
+                {countryOptions.map((item) => (
+                  <Pressable
+                    key={item.code}
+                    style={[styles.optionChip, authForm.countryCode === item.code && styles.optionChipActive]}
+                    onPress={() => updateCountry(item.code)}
+                  >
+                    <Text style={[styles.optionChipText, authForm.countryCode === item.code && styles.optionChipTextActive]}>
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
+          {signingUp && (
+            <View style={styles.fieldGroup}>
+              <Text style={styles.inputLabel}>Preferred currency</Text>
+              <View style={styles.optionGrid}>
+                {currencyOptions.map((item) => (
+                  <Pressable
+                    key={item.code}
+                    style={[styles.optionChip, authForm.currency === item.code && styles.optionChipActive]}
+                    onPress={() => updateAuthForm('currency', item.code)}
+                  >
+                    <Text style={[styles.optionChipText, authForm.currency === item.code && styles.optionChipTextActive]}>
+                      {item.code}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={styles.helperText}>
+                Prices across the app will be shown in {authForm.currency}.
+              </Text>
             </View>
           )}
           <Pressable style={styles.primaryActionLarge} onPress={onSubmit}>
@@ -1286,7 +1428,9 @@ function TabIcon({ active, name }) {
 function MarketScreen({
   categories,
   compact,
+  formatMoney,
   jobs,
+  marketLabel,
   mode,
   offers,
   offerDrafts,
@@ -1308,7 +1452,7 @@ function MarketScreen({
       <View style={styles.hero}>
         <View style={styles.heroCopy}>
           <Text style={styles.eyebrow}>VERIFIED LOCAL MARKETPLACE</Text>
-          <Text style={styles.heroTitle}>Book trusted help across Ireland.</Text>
+          <Text style={styles.heroTitle}>Book trusted help near you.</Text>
           <Text style={styles.heroText}>
             Post work, compare offers, accept a provider, message securely and track completion.
           </Text>
@@ -1354,7 +1498,7 @@ function MarketScreen({
       <View style={styles.sectionHeader}>
         <View>
           <Text style={styles.sectionTitle}>{mode === 'Provider' ? 'Jobs needing offers' : 'Live marketplace'}</Text>
-          <Text style={styles.sectionSubtitle}>Ireland-ready pricing, locations and workflow</Text>
+          <Text style={styles.sectionSubtitle}>{`${marketLabel}-ready pricing, locations and workflow`}</Text>
         </View>
         <Pressable style={styles.textAction} onPress={() => setActiveTab('post')}>
           <Text style={styles.textActionLabel}>Post job</Text>
@@ -1391,6 +1535,7 @@ function MarketScreen({
               key={job.id}
               compact={compact}
               draft={offerDrafts[job.id] ?? emptyOfferDraft}
+              formatMoney={formatMoney}
               job={job}
               mode={mode}
               selected={selectedJob?.id === job.id}
@@ -1407,7 +1552,7 @@ function MarketScreen({
         ) : (
           <EmptyState
             title="No matching jobs"
-            body="Try another category or clear the search to see more Ireland-based work."
+            body="Try another category or clear the search to see more local work."
             action="Post a job"
             onPress={() => setActiveTab('post')}
           />
@@ -1424,6 +1569,7 @@ function MarketScreen({
         {providers.map((provider) => (
           <ProviderCard
             key={provider.id}
+            formatMoney={formatMoney}
             provider={provider}
             requestProvider={() => requestProvider(provider)}
             viewCategory={() => setSelectedCategory(categoryId(provider.category))}
@@ -1456,6 +1602,7 @@ function CategoryPill({ active, count, label, onPress, tone }) {
 function JobCard({
   compact,
   draft,
+  formatMoney,
   job,
   mode,
   offersCount,
@@ -1554,7 +1701,7 @@ function StatusPill({ status }) {
   );
 }
 
-function ProviderCard({ provider, requestProvider, viewCategory }) {
+function ProviderCard({ formatMoney, provider, requestProvider, viewCategory }) {
   return (
     <View style={styles.providerCard}>
       <View style={[styles.providerAvatar, { backgroundColor: provider.tone }]}>
@@ -1582,12 +1729,12 @@ function ProviderCard({ provider, requestProvider, viewCategory }) {
   );
 }
 
-function PostScreen({ jobDraft, publishJob, updateJobDraft }) {
+function PostScreen({ countryLabel, currencyCode, jobDraft, locationHint, publishJob, updateJobDraft }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <Text style={styles.screenTitle}>Post a job</Text>
       <Text style={styles.screenText}>
-        Create a clear request so verified providers can price it accurately and send offers.
+        {`Create a clear request so verified providers in ${countryLabel} can price it in ${currencyCode} and send offers.`}
       </Text>
 
       <View style={styles.formCard}>
@@ -1605,7 +1752,7 @@ function PostScreen({ jobDraft, publishJob, updateJobDraft }) {
         />
         <LabeledInput
           label="Location"
-          placeholder="Dublin 2, Cork City, Galway..."
+          placeholder={locationHint}
           value={jobDraft.location}
           onChangeText={(value) => updateJobDraft('location', value)}
         />
@@ -1666,6 +1813,7 @@ function OffersScreen({
   checkoutOffer,
   confirmPayment,
   declineOffer,
+  formatMoney,
   jobs,
   openCheckout,
   offers,
@@ -1690,8 +1838,9 @@ function OffersScreen({
       <Text style={styles.screenText}>Review pricing, arrival time and provider notes before booking.</Text>
 
       {checkoutOffer && (
-        <PaymentPanel
+          <PaymentPanel
           confirmPayment={confirmPayment}
+          formatMoney={formatMoney}
           job={jobs.find((item) => item.id === checkoutOffer.jobId)}
           offer={checkoutOffer}
           paymentMethods={paymentMethods}
@@ -1771,6 +1920,7 @@ function OffersScreen({
 
 function PaymentPanel({
   confirmPayment,
+  formatMoney,
   job,
   offer,
   paymentMethods,
@@ -1823,6 +1973,7 @@ function MessagesScreen({
   acceptOffer,
   chatDraft,
   declineOffer,
+  formatMoney,
   jobs,
   messages,
   openMessage,
@@ -1942,6 +2093,7 @@ function ProfileScreen({
   alerts,
   completeJob,
   currentUser,
+  formatMoney,
   instantBooking,
   jobs,
   mode,
@@ -1961,12 +2113,14 @@ function ProfileScreen({
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       <View style={styles.profileTop}>
         <View style={styles.profileAvatar}>
-          <Text style={styles.profileAvatarText}>WJ</Text>
+          <Text style={styles.profileAvatarText}>OW</Text>
         </View>
         <View style={styles.profileCopy}>
-          <Text style={styles.profileName}>{currentUser?.name ?? 'WEEJOB Ireland'}</Text>
+          <Text style={styles.profileName}>{currentUser?.name ?? 'OpenWork'}</Text>
           <Text style={styles.profileMeta}>
-            {currentUser?.email ?? 'Verified customer and provider account'}
+            {currentUser
+              ? `${currentUser.email} - ${currentUser.countryLabel} - ${currentUser.currency}`
+              : 'Verified customer and provider account'}
           </Text>
         </View>
       </View>
@@ -2862,6 +3016,39 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     gap: 7,
+  },
+  optionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  optionChip: {
+    minHeight: 40,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.line,
+  },
+  optionChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  optionChipText: {
+    color: COLORS.ink,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  optionChipTextActive: {
+    color: COLORS.ink,
+  },
+  helperText: {
+    color: COLORS.muted,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '700',
   },
   inputLabel: {
     color: COLORS.ink,

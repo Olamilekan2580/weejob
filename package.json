@@ -1,5 +1,5 @@
 {
-  "name": "weejob",
+  "name": "openwork",
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
@@ -17,7 +17,7 @@
     "web": "expo start --web",
     "export:android": "expo export --platform android",
     "export:web": "expo export --platform web",
-    "check": "expo export --platform android --output-dir /tmp/weejob-check-android && expo export --platform web --output-dir /tmp/weejob-check-web"
+    "check": "expo export --platform android --output-dir /tmp/openwork-check-android && expo export --platform web --output-dir /tmp/openwork-check-web"
   },
   "private": true
 }
