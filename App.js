@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -41,224 +41,6 @@ const categoryPalette = {
   'Pet Care': '#88D8C0',
 };
 
-const initialCategories = [
-  { id: 'cleaning', label: 'Cleaning', count: 28, tone: categoryPalette.Cleaning },
-  { id: 'plumbing', label: 'Plumbing', count: 16, tone: categoryPalette.Plumbing },
-  { id: 'electrical', label: 'Electrical', count: 12, tone: categoryPalette.Electrical },
-  { id: 'handyman', label: 'Handyman', count: 21, tone: categoryPalette.Handyman },
-  { id: 'gardening', label: 'Gardening', count: 18, tone: categoryPalette.Gardening },
-  { id: 'moving', label: 'Moving', count: 9, tone: categoryPalette.Moving },
-  { id: 'painting', label: 'Painting', count: 14, tone: categoryPalette.Painting },
-  { id: 'pet-care', label: 'Pet Care', count: 7, tone: categoryPalette['Pet Care'] },
-];
-
-const initialJobs = [
-  {
-    id: 101,
-    title: 'Deep clean two-bedroom apartment',
-    category: 'Cleaning',
-    location: 'Rathmines, Dublin',
-    distance: '2.4 km',
-    budget: 145,
-    schedule: 'Today, 16:00',
-    description: 'Full apartment clean after guests, including kitchen appliances and two bathrooms.',
-    customer: 'Sophie Walsh',
-    status: 'Open',
-    urgent: true,
-    createdAt: '12 min ago',
-    acceptedOfferId: null,
-  },
-  {
-    id: 102,
-    title: 'Repair leaking bathroom tap',
-    category: 'Plumbing',
-    location: 'Salthill, Galway',
-    distance: '3.1 km',
-    budget: 95,
-    schedule: 'Tomorrow morning',
-    description: 'Mixer tap keeps dripping. Please include call-out and parts estimate.',
-    customer: 'Declan Murphy',
-    status: 'Open',
-    urgent: false,
-    createdAt: '34 min ago',
-    acceptedOfferId: null,
-  },
-  {
-    id: 103,
-    title: 'Assemble home office furniture',
-    category: 'Handyman',
-    location: 'Douglas, Cork',
-    distance: '5.8 km',
-    budget: 120,
-    schedule: 'Friday afternoon',
-    description: 'Desk, shelving unit and ergonomic chair need assembly in a new home office.',
-    customer: 'Aisling Byrne',
-    status: 'Open',
-    urgent: false,
-    createdAt: '1h ago',
-    acceptedOfferId: null,
-  },
-  {
-    id: 104,
-    title: 'Garden tidy and hedge trim',
-    category: 'Gardening',
-    location: 'Blackrock, Dublin',
-    distance: '6.2 km',
-    budget: 180,
-    schedule: 'This weekend',
-    description: 'Small back garden needs mowing, hedge trimming, weeding and green waste removal.',
-    customer: 'Niamh O Connor',
-    status: 'Open',
-    urgent: false,
-    createdAt: '2h ago',
-    acceptedOfferId: null,
-  },
-];
-
-const initialProviders = [
-  {
-    id: 201,
-    name: 'Emerald HomeCare',
-    category: 'Cleaning',
-    rating: '4.9',
-    reviews: 184,
-    completed: 312,
-    response: '9 min',
-    location: 'Dublin',
-    verified: true,
-    hourly: 38,
-    initials: 'EH',
-    tone: COLORS.primary,
-  },
-  {
-    id: 202,
-    name: 'Liffey Plumbing Co.',
-    category: 'Plumbing',
-    rating: '4.8',
-    reviews: 96,
-    completed: 147,
-    response: '14 min',
-    location: 'Dublin',
-    verified: true,
-    hourly: 65,
-    initials: 'LP',
-    tone: '#73C7FF',
-  },
-  {
-    id: 203,
-    name: 'Cork Fix & Fit',
-    category: 'Handyman',
-    rating: '4.9',
-    reviews: 121,
-    completed: 204,
-    response: '18 min',
-    location: 'Cork',
-    verified: true,
-    hourly: 48,
-    initials: 'CF',
-    tone: '#FFB86B',
-  },
-  {
-    id: 204,
-    name: 'Green Mile Gardens',
-    category: 'Gardening',
-    rating: '4.7',
-    reviews: 88,
-    completed: 133,
-    response: '22 min',
-    location: 'Dublin',
-    verified: true,
-    hourly: 42,
-    initials: 'GG',
-    tone: '#63D471',
-  },
-];
-
-const initialOffers = [
-  {
-    id: 301,
-    jobId: 101,
-    providerId: 201,
-    amount: 135,
-    eta: 'Today, 15:45',
-    note: 'Two-person team, eco products included, insured and available today.',
-    status: 'Pending',
-    paymentStatus: 'Not paid',
-    paymentMethod: null,
-    createdAt: '8 min ago',
-  },
-  {
-    id: 302,
-    jobId: 102,
-    providerId: 202,
-    amount: 110,
-    eta: 'Tomorrow, 09:30',
-    note: 'Call-out, seal replacement and pressure check included. Parts billed only if needed.',
-    status: 'Pending',
-    paymentStatus: 'Not paid',
-    paymentMethod: null,
-    createdAt: '20 min ago',
-  },
-];
-
-const initialMessages = [
-  {
-    id: 401,
-    participant: 'Emerald HomeCare',
-    jobId: 101,
-    offerId: 301,
-    preview: 'We can bring all cleaning products and arrive before 4.',
-    time: '8m',
-    unread: 1,
-  },
-  {
-    id: 402,
-    participant: 'Liffey Plumbing Co.',
-    jobId: 102,
-    offerId: 302,
-    preview: 'Please send a close photo of the tap if possible.',
-    time: '19m',
-    unread: 0,
-  },
-];
-
-const initialThreads = {
-  401: [
-    {
-      id: 501,
-      from: 'provider',
-      text: 'We can bring all cleaning products and arrive before 4.',
-    },
-    {
-      id: 502,
-      from: 'customer',
-      text: 'That works. Please include the oven and fridge.',
-    },
-  ],
-  402: [
-    {
-      id: 503,
-      from: 'provider',
-      text: 'Please send a close photo of the tap if possible.',
-    },
-  ],
-};
-
-const initialAlerts = [
-  {
-    id: 601,
-    title: 'Offer received',
-    body: 'Emerald HomeCare sent an offer for your Dublin cleaning job.',
-    status: 'New',
-  },
-  {
-    id: 602,
-    title: 'Safety reminder',
-    body: 'Keep payment in-app and release it only when the job is completed.',
-    status: 'Trust',
-  },
-];
-
 const emptyJobDraft = {
   title: '',
   category: 'Cleaning',
@@ -275,13 +57,407 @@ const emptyOfferDraft = {
 };
 
 const countryOptions = [
-  { code: 'IE', label: 'Ireland', locale: 'en-IE', currency: 'EUR', cityHint: 'Dublin 2, Cork City, Galway...' },
-  { code: 'US', label: 'United States', locale: 'en-US', currency: 'USD', cityHint: 'Brooklyn, Austin, Seattle...' },
-  { code: 'GB', label: 'United Kingdom', locale: 'en-GB', currency: 'GBP', cityHint: 'Shoreditch, Manchester, Leeds...' },
-  { code: 'NG', label: 'Nigeria', locale: 'en-NG', currency: 'NGN', cityHint: 'Yaba, Abuja, Port Harcourt...' },
-  { code: 'CA', label: 'Canada', locale: 'en-CA', currency: 'CAD', cityHint: 'Toronto, Vancouver, Calgary...' },
-  { code: 'AU', label: 'Australia', locale: 'en-AU', currency: 'AUD', cityHint: 'Sydney, Melbourne, Perth...' },
+  {
+    code: 'IE',
+    label: 'Ireland',
+    locale: 'en-IE',
+    currency: 'EUR',
+    cityHint: 'Dublin 2, Cork City, Galway...',
+    distanceUnit: 'km',
+    paymentMethods: [
+      { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
+      { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
+      { id: 'bank', label: 'Irish bank transfer', meta: 'Manual confirmation' },
+    ],
+  },
+  {
+    code: 'US',
+    label: 'United States',
+    locale: 'en-US',
+    currency: 'USD',
+    cityHint: 'Brooklyn, Austin, Seattle...',
+    distanceUnit: 'mi',
+    paymentMethods: [
+      { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
+      { id: 'amex', label: 'Amex ending 9015', meta: 'Business card ready' },
+      { id: 'ach', label: 'ACH transfer', meta: '1-2 business days' },
+    ],
+  },
+  {
+    code: 'GB',
+    label: 'United Kingdom',
+    locale: 'en-GB',
+    currency: 'GBP',
+    cityHint: 'Shoreditch, Manchester, Leeds...',
+    distanceUnit: 'mi',
+    paymentMethods: [
+      { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
+      { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
+      { id: 'openbanking', label: 'Open Banking', meta: 'Bank-authenticated payout hold' },
+    ],
+  },
+  {
+    code: 'NG',
+    label: 'Nigeria',
+    locale: 'en-NG',
+    currency: 'NGN',
+    cityHint: 'Yaba, Abuja, Port Harcourt...',
+    distanceUnit: 'km',
+    paymentMethods: [
+      { id: 'verve', label: 'Verve ending 2455', meta: 'Instant escrow hold' },
+      { id: 'bank', label: 'Bank transfer', meta: 'Manual confirmation' },
+      { id: 'mobile', label: 'Mobile wallet', meta: 'Fast release ready' },
+    ],
+  },
+  {
+    code: 'CA',
+    label: 'Canada',
+    locale: 'en-CA',
+    currency: 'CAD',
+    cityHint: 'Toronto, Vancouver, Calgary...',
+    distanceUnit: 'km',
+    paymentMethods: [
+      { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
+      { id: 'interac', label: 'Interac e-Transfer', meta: 'Bank-backed confirmation' },
+      { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
+    ],
+  },
+  {
+    code: 'AU',
+    label: 'Australia',
+    locale: 'en-AU',
+    currency: 'AUD',
+    cityHint: 'Sydney, Melbourne, Perth...',
+    distanceUnit: 'km',
+    paymentMethods: [
+      { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
+      { id: 'payid', label: 'PayID transfer', meta: 'Fast bank confirmation' },
+      { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
+    ],
+  },
 ];
+
+const STORAGE_KEY = 'openwork-state-v2';
+const memoryStorage = new Map();
+
+const marketFixtures = {
+  IE: {
+    jobs: [
+      {
+        id: 101,
+        title: 'Deep clean two-bedroom apartment',
+        category: 'Cleaning',
+        location: 'Rathmines, Dublin',
+        distance: '2.4 km',
+        budget: 145,
+        schedule: 'Today, 16:00',
+        description: 'Full apartment clean after guests, including kitchen appliances and two bathrooms.',
+        customer: 'Sophie Walsh',
+        status: 'Open',
+        urgent: true,
+        createdAt: '12 min ago',
+        acceptedOfferId: null,
+      },
+      {
+        id: 102,
+        title: 'Repair leaking bathroom tap',
+        category: 'Plumbing',
+        location: 'Salthill, Galway',
+        distance: '3.1 km',
+        budget: 95,
+        schedule: 'Tomorrow morning',
+        description: 'Mixer tap keeps dripping. Please include call-out and parts estimate.',
+        customer: 'Declan Murphy',
+        status: 'Open',
+        urgent: false,
+        createdAt: '34 min ago',
+        acceptedOfferId: null,
+      },
+      {
+        id: 103,
+        title: 'Assemble home office furniture',
+        category: 'Handyman',
+        location: 'Douglas, Cork',
+        distance: '5.8 km',
+        budget: 120,
+        schedule: 'Friday afternoon',
+        description: 'Desk, shelving unit and ergonomic chair need assembly in a new home office.',
+        customer: 'Aisling Byrne',
+        status: 'Open',
+        urgent: false,
+        createdAt: '1h ago',
+        acceptedOfferId: null,
+      },
+    ],
+    providers: [
+      {
+        id: 201,
+        name: 'Emerald HomeCare',
+        category: 'Cleaning',
+        rating: '4.9',
+        reviews: 184,
+        completed: 312,
+        response: '9 min',
+        location: 'Dublin',
+        verified: true,
+        hourly: 38,
+        initials: 'EH',
+        tone: COLORS.primary,
+      },
+      {
+        id: 202,
+        name: 'Liffey Plumbing Co.',
+        category: 'Plumbing',
+        rating: '4.8',
+        reviews: 96,
+        completed: 147,
+        response: '14 min',
+        location: 'Galway',
+        verified: true,
+        hourly: 65,
+        initials: 'LP',
+        tone: '#73C7FF',
+      },
+      {
+        id: 203,
+        name: 'Cork Fix & Fit',
+        category: 'Handyman',
+        rating: '4.9',
+        reviews: 121,
+        completed: 204,
+        response: '18 min',
+        location: 'Cork',
+        verified: true,
+        hourly: 48,
+        initials: 'CF',
+        tone: '#FFB86B',
+      },
+    ],
+    offers: [
+      {
+        id: 301,
+        jobId: 101,
+        providerId: 201,
+        amount: 135,
+        eta: 'Today, 15:45',
+        note: 'Two-person team, eco products included, insured and available today.',
+        status: 'Pending',
+        paymentStatus: 'Not paid',
+        paymentMethod: null,
+        createdAt: '8 min ago',
+      },
+      {
+        id: 302,
+        jobId: 102,
+        providerId: 202,
+        amount: 110,
+        eta: 'Tomorrow, 09:30',
+        note: 'Call-out, seal replacement and pressure check included. Parts billed only if needed.',
+        status: 'Pending',
+        paymentStatus: 'Not paid',
+        paymentMethod: null,
+        createdAt: '20 min ago',
+      },
+    ],
+    messages: [
+      { id: 401, participant: 'Emerald HomeCare', jobId: 101, offerId: 301, preview: 'We can bring all cleaning products and arrive before 4.', time: '8m', unread: 1 },
+      { id: 402, participant: 'Liffey Plumbing Co.', jobId: 102, offerId: 302, preview: 'Please send a close photo of the tap if possible.', time: '19m', unread: 0 },
+    ],
+    threads: {
+      401: [
+        { id: 501, from: 'provider', text: 'We can bring all cleaning products and arrive before 4.' },
+        { id: 502, from: 'customer', text: 'That works. Please include the oven and fridge.' },
+      ],
+      402: [{ id: 503, from: 'provider', text: 'Please send a close photo of the tap if possible.' }],
+    },
+    alerts: [
+      { id: 601, title: 'Offer received', body: 'Emerald HomeCare sent an offer for your Dublin cleaning job.', status: 'New' },
+      { id: 602, title: 'Safety reminder', body: 'Keep payment in-app and release it only when the job is completed.', status: 'Trust' },
+    ],
+  },
+  US: {
+    jobs: [
+      {
+        id: 1101,
+        title: 'Post-renovation apartment cleanup',
+        category: 'Cleaning',
+        location: 'Williamsburg, Brooklyn',
+        distance: '1.7 mi',
+        budget: 240,
+        schedule: 'Today, 5:30 PM',
+        description: 'Need dust removal, floor cleanup, bathroom detail and window wipe-down after light renovation work.',
+        customer: 'Maya Carter',
+        status: 'Open',
+        urgent: true,
+        createdAt: '18 min ago',
+        acceptedOfferId: null,
+      },
+      {
+        id: 1102,
+        title: 'Install ceiling fan in spare bedroom',
+        category: 'Electrical',
+        location: 'South Congress, Austin',
+        distance: '2.9 mi',
+        budget: 160,
+        schedule: 'Tomorrow, 10:00 AM',
+        description: 'Existing light fixture needs to be swapped for a remote-controlled ceiling fan.',
+        customer: 'Jordan Lee',
+        status: 'Open',
+        urgent: false,
+        createdAt: '42 min ago',
+        acceptedOfferId: null,
+      },
+      {
+        id: 1103,
+        title: 'Pack and move studio apartment',
+        category: 'Moving',
+        location: 'Capitol Hill, Seattle',
+        distance: '4.4 mi',
+        budget: 320,
+        schedule: 'Saturday, 9:00 AM',
+        description: 'Need packing help, van loading and unloading into a second-floor walk-up.',
+        customer: 'Avery Nguyen',
+        status: 'Open',
+        urgent: false,
+        createdAt: '1h ago',
+        acceptedOfferId: null,
+      },
+    ],
+    providers: [
+      { id: 1201, name: 'Hudson Spark Clean', category: 'Cleaning', rating: '4.9', reviews: 211, completed: 388, response: '7 min', location: 'New York', verified: true, hourly: 55, initials: 'HS', tone: COLORS.primary },
+      { id: 1202, name: 'Lone Star Electric', category: 'Electrical', rating: '4.8', reviews: 143, completed: 260, response: '11 min', location: 'Austin', verified: true, hourly: 92, initials: 'LS', tone: '#FFD166' },
+      { id: 1203, name: 'North Sound Movers', category: 'Moving', rating: '4.7', reviews: 104, completed: 176, response: '16 min', location: 'Seattle', verified: true, hourly: 88, initials: 'NS', tone: '#B9A7FF' },
+    ],
+    offers: [
+      { id: 1301, jobId: 1101, providerId: 1201, amount: 225, eta: 'Today, 5:00 PM', note: 'Crew of two with HEPA vacuums and post-reno cleanup experience.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '10 min ago' },
+      { id: 1302, jobId: 1102, providerId: 1202, amount: 175, eta: 'Tomorrow, 9:30 AM', note: 'Includes fan mounting, balance check and disposal of old fixture.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '24 min ago' },
+    ],
+    messages: [
+      { id: 1401, participant: 'Hudson Spark Clean', jobId: 1101, offerId: 1301, preview: 'We can bring ladders and dust barriers if needed.', time: '10m', unread: 1 },
+      { id: 1402, participant: 'Lone Star Electric', jobId: 1102, offerId: 1302, preview: 'Please confirm ceiling height and if there is attic access.', time: '24m', unread: 0 },
+    ],
+    threads: {
+      1401: [{ id: 1501, from: 'provider', text: 'We can bring ladders and dust barriers if needed.' }],
+      1402: [{ id: 1502, from: 'provider', text: 'Please confirm ceiling height and if there is attic access.' }],
+    },
+    alerts: [
+      { id: 1601, title: 'Offer received', body: 'Hudson Spark Clean priced your Brooklyn cleanup request.', status: 'New' },
+      { id: 1602, title: 'Trust tip', body: 'Use escrow for higher-value bookings and keep all updates in chat.', status: 'Trust' },
+    ],
+  },
+  GB: {
+    jobs: [
+      { id: 2101, title: 'End-of-tenancy flat clean', category: 'Cleaning', location: 'Shoreditch, London', distance: '1.2 mi', budget: 185, schedule: 'Today, 18:00', description: 'Need kitchen degreasing, limescale removal and appliance wipe-down before handover.', customer: 'Amelia Brown', status: 'Open', urgent: true, createdAt: '9 min ago', acceptedOfferId: null },
+      { id: 2102, title: 'Fix dripping kitchen sink and trap', category: 'Plumbing', location: 'Northern Quarter, Manchester', distance: '2.8 mi', budget: 115, schedule: 'Tomorrow, 08:30', description: 'Leak under sink worsens during dishwasher cycles. Please inspect seals and waste trap.', customer: 'Harry Collins', status: 'Open', urgent: false, createdAt: '31 min ago', acceptedOfferId: null },
+      { id: 2103, title: 'Refresh white paint in guest room', category: 'Painting', location: 'Headingley, Leeds', distance: '4.1 mi', budget: 210, schedule: 'Sunday afternoon', description: 'One bedroom repaint with minor prep and furniture protection included.', customer: 'Sophie Walker', status: 'Open', urgent: false, createdAt: '58 min ago', acceptedOfferId: null },
+    ],
+    providers: [
+      { id: 2201, name: 'City Sparkle London', category: 'Cleaning', rating: '4.9', reviews: 172, completed: 295, response: '8 min', location: 'London', verified: true, hourly: 42, initials: 'CS', tone: COLORS.primary },
+      { id: 2202, name: 'Northline Plumbing', category: 'Plumbing', rating: '4.8', reviews: 131, completed: 204, response: '12 min', location: 'Manchester', verified: true, hourly: 74, initials: 'NP', tone: '#73C7FF' },
+      { id: 2203, name: 'Leeds Finish Co.', category: 'Painting', rating: '4.7', reviews: 96, completed: 141, response: '20 min', location: 'Leeds', verified: true, hourly: 51, initials: 'LF', tone: '#FF9CAD' },
+    ],
+    offers: [
+      { id: 2301, jobId: 2101, providerId: 2201, amount: 170, eta: 'Today, 17:30', note: 'We can finish before check-out and supply all materials.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '6 min ago' },
+      { id: 2302, jobId: 2102, providerId: 2202, amount: 128, eta: 'Tomorrow, 08:00', note: 'Includes seal kit and under-sink inspection.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '21 min ago' },
+    ],
+    messages: [
+      { id: 2401, participant: 'City Sparkle London', jobId: 2101, offerId: 2301, preview: 'We can finish before the agent arrives.', time: '6m', unread: 1 },
+      { id: 2402, participant: 'Northline Plumbing', jobId: 2102, offerId: 2302, preview: 'Please send a photo of the cabinet base if possible.', time: '21m', unread: 0 },
+    ],
+    threads: {
+      2401: [{ id: 2501, from: 'provider', text: 'We can finish before the agent arrives.' }],
+      2402: [{ id: 2502, from: 'provider', text: 'Please send a photo of the cabinet base if possible.' }],
+    },
+    alerts: [
+      { id: 2601, title: 'Offer received', body: 'City Sparkle London responded to your Shoreditch clean.', status: 'New' },
+      { id: 2602, title: 'Market note', body: 'Open Banking payments are available for UK escrow checkouts.', status: 'Trust' },
+    ],
+  },
+  NG: {
+    jobs: [
+      { id: 3101, title: 'Office deep clean before client visit', category: 'Cleaning', location: 'Yaba, Lagos', distance: '2.2 km', budget: 85000, schedule: 'Today, 17:00', description: 'Need meeting room, reception and restroom cleaning before tomorrow morning presentation.', customer: 'Adaeze Okafor', status: 'Open', urgent: true, createdAt: '11 min ago', acceptedOfferId: null },
+      { id: 3102, title: 'Service inverter and batteries', category: 'Electrical', location: 'Wuse 2, Abuja', distance: '5.6 km', budget: 120000, schedule: 'Tomorrow, 11:00', description: 'Need full inverter system check, wiring inspection and battery terminal cleanup.', customer: 'Tunde Yusuf', status: 'Open', urgent: false, createdAt: '37 min ago', acceptedOfferId: null },
+      { id: 3103, title: 'Fix wardrobe hinges and drawer runners', category: 'Handyman', location: 'GRA Phase 2, Port Harcourt', distance: '3.8 km', budget: 65000, schedule: 'Saturday, 14:00', description: 'Three wardrobe doors need alignment and two drawers keep jamming.', customer: 'Chioma Briggs', status: 'Open', urgent: false, createdAt: '1h ago', acceptedOfferId: null },
+    ],
+    providers: [
+      { id: 3201, name: 'Lagos Prime Clean', category: 'Cleaning', rating: '4.9', reviews: 203, completed: 362, response: '8 min', location: 'Lagos', verified: true, hourly: 18000, initials: 'LP', tone: COLORS.primary },
+      { id: 3202, name: 'Capital Power Works', category: 'Electrical', rating: '4.8', reviews: 119, completed: 188, response: '13 min', location: 'Abuja', verified: true, hourly: 25000, initials: 'CP', tone: '#FFD166' },
+      { id: 3203, name: 'Delta Handy Crew', category: 'Handyman', rating: '4.7', reviews: 87, completed: 149, response: '19 min', location: 'Port Harcourt', verified: true, hourly: 15000, initials: 'DH', tone: '#FFB86B' },
+    ],
+    offers: [
+      { id: 3301, jobId: 3101, providerId: 3201, amount: 78000, eta: 'Today, 16:30', note: 'Four-person team available with floor machine and washroom consumables.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '7 min ago' },
+      { id: 3302, jobId: 3102, providerId: 3202, amount: 135000, eta: 'Tomorrow, 10:15', note: 'Diagnostics, cable tightening and load balancing included.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '23 min ago' },
+    ],
+    messages: [
+      { id: 3401, participant: 'Lagos Prime Clean', jobId: 3101, offerId: 3301, preview: 'We can arrive with backup staff if you need same-day completion.', time: '7m', unread: 1 },
+      { id: 3402, participant: 'Capital Power Works', jobId: 3102, offerId: 3302, preview: 'Please confirm inverter brand and battery count.', time: '23m', unread: 0 },
+    ],
+    threads: {
+      3401: [{ id: 3501, from: 'provider', text: 'We can arrive with backup staff if you need same-day completion.' }],
+      3402: [{ id: 3502, from: 'provider', text: 'Please confirm inverter brand and battery count.' }],
+    },
+    alerts: [
+      { id: 3601, title: 'Offer received', body: 'Lagos Prime Clean sent pricing for your Yaba office cleanup.', status: 'New' },
+      { id: 3602, title: 'Payment tip', body: 'Wallet and bank-transfer escrow both support payout hold and release.', status: 'Trust' },
+    ],
+  },
+  CA: {
+    jobs: [
+      { id: 4101, title: 'Move sofa and dining set to new condo', category: 'Moving', location: 'Liberty Village, Toronto', distance: '6.1 km', budget: 280, schedule: 'Friday, 15:00', description: 'Need two movers, blankets and careful elevator booking timing.', customer: 'Noah Patel', status: 'Open', urgent: false, createdAt: '16 min ago', acceptedOfferId: null },
+      { id: 4102, title: 'Seasonal yard cleanup and mulch top-up', category: 'Gardening', location: 'Kitsilano, Vancouver', distance: '4.2 km', budget: 230, schedule: 'Saturday morning', description: 'Front and back garden cleanup with hedge shaping and mulch spread.', customer: 'Claire Bernard', status: 'Open', urgent: false, createdAt: '39 min ago', acceptedOfferId: null },
+      { id: 4103, title: 'Patch drywall and repaint hallway', category: 'Painting', location: 'Beltline, Calgary', distance: '5.9 km', budget: 260, schedule: 'Monday, 13:00', description: 'Need small dent repairs and one-coat repaint in condo hallway.', customer: 'Liam Ross', status: 'Open', urgent: false, createdAt: '1h ago', acceptedOfferId: null },
+    ],
+    providers: [
+      { id: 4201, name: 'Sixix Move Crew', category: 'Moving', rating: '4.8', reviews: 138, completed: 224, response: '12 min', location: 'Toronto', verified: true, hourly: 84, initials: 'SM', tone: '#B9A7FF' },
+      { id: 4202, name: 'Pacific Green Yards', category: 'Gardening', rating: '4.9', reviews: 111, completed: 180, response: '10 min', location: 'Vancouver', verified: true, hourly: 58, initials: 'PG', tone: '#63D471' },
+      { id: 4203, name: 'Prairie Paint Works', category: 'Painting', rating: '4.7', reviews: 92, completed: 146, response: '17 min', location: 'Calgary', verified: true, hourly: 62, initials: 'PP', tone: '#FF9CAD' },
+    ],
+    offers: [
+      { id: 4301, jobId: 4101, providerId: 4201, amount: 295, eta: 'Friday, 14:30', note: 'Truck, blankets, shrink-wrap and elevator coordination included.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '9 min ago' },
+      { id: 4302, jobId: 4102, providerId: 4202, amount: 210, eta: 'Saturday, 08:30', note: 'Includes yard waste bags, edge cleanup and fresh mulch spread.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '25 min ago' },
+    ],
+    messages: [
+      { id: 4401, participant: 'Sixix Move Crew', jobId: 4101, offerId: 4301, preview: 'We can coordinate with concierge for loading dock access.', time: '9m', unread: 1 },
+      { id: 4402, participant: 'Pacific Green Yards', jobId: 4102, offerId: 4302, preview: 'Please share yard photos if you have them.', time: '25m', unread: 0 },
+    ],
+    threads: {
+      4401: [{ id: 4501, from: 'provider', text: 'We can coordinate with concierge for loading dock access.' }],
+      4402: [{ id: 4502, from: 'provider', text: 'Please share yard photos if you have them.' }],
+    },
+    alerts: [
+      { id: 4601, title: 'Offer received', body: 'Sixix Move Crew priced your Toronto condo move.', status: 'New' },
+      { id: 4602, title: 'Checkout ready', body: 'Interac e-Transfer is available for supported Canadian bookings.', status: 'Trust' },
+    ],
+  },
+  AU: {
+    jobs: [
+      { id: 5101, title: 'Assemble nursery furniture set', category: 'Handyman', location: 'Surry Hills, Sydney', distance: '3.4 km', budget: 190, schedule: 'Tomorrow, 16:00', description: 'Need cot, dresser and rocker chair assembled with packaging removed.', customer: 'Olivia Smith', status: 'Open', urgent: false, createdAt: '13 min ago', acceptedOfferId: null },
+      { id: 5102, title: 'Unblock outdoor drain and clear leaves', category: 'Gardening', location: 'South Yarra, Melbourne', distance: '4.8 km', budget: 165, schedule: 'Saturday, 09:00', description: 'Patio drain overflows during rain. Need leaf removal and water-flow check.', customer: 'Isaac Turner', status: 'Open', urgent: false, createdAt: '36 min ago', acceptedOfferId: null },
+      { id: 5103, title: 'Dog walking and feeding over weekend', category: 'Pet Care', location: 'Subiaco, Perth', distance: '2.1 km', budget: 140, schedule: 'This weekend', description: 'Two daily visits for a senior labrador, with meds after dinner.', customer: 'Grace Miller', status: 'Open', urgent: false, createdAt: '54 min ago', acceptedOfferId: null },
+    ],
+    providers: [
+      { id: 5201, name: 'Harbour Handy Co.', category: 'Handyman', rating: '4.8', reviews: 108, completed: 169, response: '15 min', location: 'Sydney', verified: true, hourly: 64, initials: 'HH', tone: '#FFB86B' },
+      { id: 5202, name: 'Laneway Garden Crew', category: 'Gardening', rating: '4.9', reviews: 126, completed: 201, response: '11 min', location: 'Melbourne', verified: true, hourly: 59, initials: 'LG', tone: '#63D471' },
+      { id: 5203, name: 'Perth Pet Circle', category: 'Pet Care', rating: '4.9', reviews: 83, completed: 130, response: '9 min', location: 'Perth', verified: true, hourly: 47, initials: 'PP', tone: '#88D8C0' },
+    ],
+    offers: [
+      { id: 5301, jobId: 5101, providerId: 5201, amount: 175, eta: 'Tomorrow, 15:30', note: 'Assembly, safety anchoring and packaging removal included.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '8 min ago' },
+      { id: 5302, jobId: 5103, providerId: 5203, amount: 135, eta: 'Saturday, 08:00', note: 'Medication reminders and photo updates after each visit.', status: 'Pending', paymentStatus: 'Not paid', paymentMethod: null, createdAt: '19 min ago' },
+    ],
+    messages: [
+      { id: 5401, participant: 'Harbour Handy Co.', jobId: 5101, offerId: 5301, preview: 'Happy to anchor the dresser to the wall as well.', time: '8m', unread: 1 },
+      { id: 5402, participant: 'Perth Pet Circle', jobId: 5103, offerId: 5302, preview: 'Please share feeding instructions and vet contact details.', time: '19m', unread: 0 },
+    ],
+    threads: {
+      5401: [{ id: 5501, from: 'provider', text: 'Happy to anchor the dresser to the wall as well.' }],
+      5402: [{ id: 5502, from: 'provider', text: 'Please share feeding instructions and vet contact details.' }],
+    },
+    alerts: [
+      { id: 5601, title: 'Offer received', body: 'Harbour Handy Co. responded to your Sydney nursery setup request.', status: 'New' },
+      { id: 5602, title: 'Escrow note', body: 'PayID transfer support is available on eligible Australian jobs.', status: 'Trust' },
+    ],
+  },
+};
 
 const currencyOptions = [
   { code: 'EUR', label: 'Euro' },
@@ -300,6 +476,69 @@ const currencyLocales = {
   CAD: 'en-CA',
   AUD: 'en-AU',
 };
+
+const currencyRates = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.78,
+  NGN: 1540,
+  CAD: 1.37,
+  AUD: 1.52,
+};
+
+function cloneValue(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function buildMarketState(countryCode) {
+  return cloneValue(marketFixtures[countryCode] ?? marketFixtures.IE);
+}
+
+function buildAllMarketStates() {
+  return Object.fromEntries(countryOptions.map((option) => [option.code, buildMarketState(option.code)]));
+}
+
+function deriveCategories(jobs) {
+  const counts = jobs.reduce((result, job) => {
+    result[job.category] = (result[job.category] ?? 0) + 1;
+    return result;
+  }, {});
+
+  const orderedLabels = [...new Set([...Object.keys(categoryPalette), ...Object.keys(counts)])];
+
+  return orderedLabels
+    .filter((label) => (counts[label] ?? 0) > 0)
+    .map((label) => ({
+      id: categoryId(label),
+      label,
+      count: counts[label],
+      tone: categoryPalette[label] ?? COLORS.teal,
+    }));
+}
+
+async function loadStoredState() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(STORAGE_KEY);
+    }
+  } catch {}
+
+  return memoryStorage.get(STORAGE_KEY) ?? null;
+}
+
+async function saveStoredState(value) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEY, value);
+      return;
+    }
+  } catch {}
+
+  memoryStorage.set(STORAGE_KEY, value);
+}
+
+const defaultCountryCode = countryOptions[0].code;
+const initialMarketState = buildMarketState(defaultCountryCode);
 
 const tabs = [
   { id: 'market', label: 'Market', icon: 'market' },
@@ -339,12 +578,6 @@ const emptyAuthForm = {
   currency: countryOptions[0].currency,
 };
 
-const paymentMethods = [
-  { id: 'visa', label: 'Visa ending 4242', meta: 'Instant escrow hold' },
-  { id: 'mastercard', label: 'Mastercard ending 1881', meta: '3D Secure ready' },
-  { id: 'bank', label: 'Bank transfer', meta: 'Manual confirmation' },
-];
-
 function makeId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
@@ -361,6 +594,23 @@ function getPricingConfig(countryCode, currency) {
     currency: currency || country.currency,
     locale: country.locale || currencyLocales[currency] || 'en-US',
   };
+}
+
+function convertAmount(value, fromCurrency, toCurrency) {
+  const numeric = Number(value) || 0;
+
+  if (fromCurrency === toCurrency) {
+    return numeric;
+  }
+
+  const fromRate = currencyRates[fromCurrency];
+  const toRate = currencyRates[toCurrency];
+
+  if (!fromRate || !toRate) {
+    return numeric;
+  }
+
+  return (numeric / fromRate) * toRate;
 }
 
 function formatMoney(value, { currency = 'EUR', locale = 'en-IE' } = {}) {
@@ -424,32 +674,39 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('market');
   const [mode, setMode] = useState('Customer');
-  const [categories, setCategories] = useState(initialCategories);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [jobs, setJobs] = useState(initialJobs);
-  const [providers] = useState(initialProviders);
-  const [offers, setOffers] = useState(initialOffers);
-  const [messages, setMessages] = useState(initialMessages);
-  const [threads, setThreads] = useState(initialThreads);
-  const [alerts, setAlerts] = useState(initialAlerts);
+  const [marketplaces, setMarketplaces] = useState(() => buildAllMarketStates());
+  const [jobs, setJobs] = useState(initialMarketState.jobs);
+  const [providers, setProviders] = useState(initialMarketState.providers);
+  const [offers, setOffers] = useState(initialMarketState.offers);
+  const [messages, setMessages] = useState(initialMarketState.messages);
+  const [threads, setThreads] = useState(initialMarketState.threads);
+  const [alerts, setAlerts] = useState(initialMarketState.alerts);
   const [jobDraft, setJobDraft] = useState(emptyJobDraft);
   const [offerDrafts, setOfferDrafts] = useState({});
-  const [selectedJobId, setSelectedJobId] = useState(initialJobs[0]?.id ?? null);
-  const [selectedMessageId, setSelectedMessageId] = useState(initialMessages[0]?.id ?? null);
+  const [selectedJobId, setSelectedJobId] = useState(initialMarketState.jobs[0]?.id ?? null);
+  const [selectedMessageId, setSelectedMessageId] = useState(initialMarketState.messages[0]?.id ?? null);
   const [chatDraft, setChatDraft] = useState('');
   const [serviceRadius, setServiceRadius] = useState(12);
   const [instantBooking, setInstantBooking] = useState(true);
   const [checkoutOfferId, setCheckoutOfferId] = useState(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(paymentMethods[0].id);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
+    getCountryOption(defaultCountryCode).paymentMethods[0].id
+  );
+  const [loadedMarketCode, setLoadedMarketCode] = useState(defaultCountryCode);
+  const [hydrated, setHydrated] = useState(false);
   const { width } = useWindowDimensions();
   const compact = width < 390;
+  const activeCountryCode = currentUser?.countryCode ?? authForm.countryCode;
   const pricingConfig = useMemo(
-    () => getPricingConfig(currentUser?.countryCode ?? authForm.countryCode, currentUser?.currency ?? authForm.currency),
+    () => getPricingConfig(activeCountryCode, currentUser?.currency ?? authForm.currency),
     [authForm.countryCode, authForm.currency, currentUser]
   );
-  const formatPrice = (value) => formatMoney(value, pricingConfig);
   const activeCountry = pricingConfig.country;
+  const formatPrice = (value) =>
+    formatMoney(convertAmount(value, activeCountry.currency, pricingConfig.currency), pricingConfig);
+  const categories = useMemo(() => deriveCategories(jobs), [jobs]);
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
@@ -487,6 +744,120 @@ export default function App() {
     return { openJobs, pendingOffers, bookedJobs };
   }, [jobs, offers]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrateState() {
+      const raw = await loadStoredState();
+
+      if (!raw || cancelled) {
+        setHydrated(true);
+        return;
+      }
+
+      try {
+        const saved = JSON.parse(raw);
+        const nextMarkets = saved.marketplaces ? { ...buildAllMarketStates(), ...saved.marketplaces } : buildAllMarketStates();
+
+        setMarketplaces(nextMarkets);
+        setAuthStage(saved.authStage ?? 'onboarding');
+        setAuthMode(saved.authMode ?? 'signup');
+        setOnboardingIndex(saved.onboardingIndex ?? 0);
+        setAuthForm(saved.authForm ?? emptyAuthForm);
+        setCurrentUser(saved.currentUser ?? null);
+        setActiveTab(saved.activeTab ?? 'market');
+        setMode(saved.mode ?? 'Customer');
+        setSelectedCategory(saved.selectedCategory ?? 'all');
+        setSearchTerm(saved.searchTerm ?? '');
+        setServiceRadius(saved.serviceRadius ?? 12);
+        setInstantBooking(saved.instantBooking ?? true);
+      } catch {}
+
+      if (!cancelled) {
+        setHydrated(true);
+      }
+    }
+
+    hydrateState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const market = marketplaces[activeCountryCode] ?? buildMarketState(activeCountryCode);
+
+    setJobs(market.jobs);
+    setProviders(market.providers);
+    setOffers(market.offers);
+    setMessages(market.messages);
+    setThreads(market.threads);
+    setAlerts(market.alerts);
+    setSelectedCategory('all');
+    setSearchTerm('');
+    setSelectedJobId(market.jobs[0]?.id ?? null);
+    setSelectedMessageId(market.messages[0]?.id ?? null);
+    setCheckoutOfferId(null);
+    setSelectedPaymentMethod(activeCountry.paymentMethods[0].id);
+    setLoadedMarketCode(activeCountryCode);
+  }, [activeCountry, activeCountryCode, marketplaces]);
+
+  useEffect(() => {
+    if (!hydrated || loadedMarketCode !== activeCountryCode) {
+      return;
+    }
+
+    setMarketplaces((current) => ({
+      ...current,
+      [activeCountryCode]: {
+        jobs,
+        providers,
+        offers,
+        messages,
+        threads,
+        alerts,
+      },
+    }));
+  }, [activeCountryCode, alerts, hydrated, jobs, loadedMarketCode, messages, offers, providers, threads]);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+
+    saveStoredState(
+      JSON.stringify({
+        authStage,
+        authMode,
+        onboardingIndex,
+        authForm,
+        currentUser,
+        activeTab,
+        mode,
+        selectedCategory,
+        searchTerm,
+        serviceRadius,
+        instantBooking,
+        marketplaces,
+      })
+    );
+  }, [
+    activeTab,
+    authForm,
+    authMode,
+    authStage,
+    currentUser,
+    hydrated,
+    instantBooking,
+    marketplaces,
+    mode,
+    onboardingIndex,
+    searchTerm,
+    selectedCategory,
+    serviceRadius,
+  ]);
+
   function addAlert(title, body, status = 'New') {
     setAlerts((current) => [{ id: makeId(), title, body, status }, ...current]);
   }
@@ -497,6 +868,11 @@ export default function App() {
 
   function updateAuthForm(field, value) {
     setAuthForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateMode(nextMode) {
+    setMode(nextMode);
+    setCurrentUser((current) => (current ? { ...current, accountType: nextMode } : current));
   }
 
   function updateCountry(countryCode) {
@@ -510,6 +886,28 @@ export default function App() {
           ? nextCountry.currency
           : current.currency,
     }));
+  }
+
+  function updateProfileCountry(countryCode) {
+    const nextCountry = getCountryOption(countryCode);
+
+    setCurrentUser((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return {
+        ...current,
+        countryCode,
+        countryLabel: nextCountry.label,
+        locale: nextCountry.locale,
+        currency: current.currency === getCountryOption(current.countryCode).currency ? nextCountry.currency : current.currency,
+      };
+    });
+  }
+
+  function updateProfileCurrency(currency) {
+    setCurrentUser((current) => (current ? { ...current, currency } : current));
   }
 
   function openAuth(nextMode) {
@@ -554,7 +952,7 @@ export default function App() {
     };
 
     setCurrentUser(user);
-    setMode(user.accountType);
+    updateMode(user.accountType);
     setActiveTab('market');
     setAuthStage('app');
     addAlert(
@@ -577,7 +975,7 @@ export default function App() {
     };
 
     setCurrentUser(user);
-    setMode(accountType);
+    updateMode(accountType);
     setActiveTab('market');
     setAuthStage('app');
     addAlert(
@@ -622,8 +1020,8 @@ export default function App() {
       title,
       category,
       location,
-      distance: 'New',
-      budget,
+      distance: activeCountry.distanceUnit === 'mi' ? '<1 mi' : '<1 km',
+      budget: Math.round(convertAmount(budget, pricingConfig.currency, activeCountry.currency)),
       schedule,
       description,
       customer: currentUser?.name ?? 'Client Account',
@@ -635,25 +1033,6 @@ export default function App() {
     const id = categoryId(category);
 
     setJobs((current) => [newJob, ...current]);
-    setCategories((current) => {
-      const existing = current.find((item) => item.id === id);
-
-      if (existing) {
-        return current.map((item) =>
-          item.id === id ? { ...item, count: item.count + 1 } : item
-        );
-      }
-
-      return [
-        ...current,
-        {
-          id,
-          label: category,
-          count: 1,
-          tone: categoryPalette[category] ?? COLORS.teal,
-        },
-      ];
-    });
     setSelectedCategory(id);
     setSelectedJobId(newJob.id);
     setJobDraft(emptyJobDraft);
@@ -677,7 +1056,7 @@ export default function App() {
       id: makeId(),
       jobId: job.id,
         providerId: provider.id,
-        amount,
+        amount: Math.round(convertAmount(amount, pricingConfig.currency, activeCountry.currency)),
         eta,
         note,
         status: 'Pending',
@@ -807,7 +1186,9 @@ export default function App() {
       return;
     }
 
-    const method = paymentMethods.find((item) => item.id === selectedPaymentMethod) ?? paymentMethods[0];
+    const method =
+      activeCountry.paymentMethods.find((item) => item.id === selectedPaymentMethod) ??
+      activeCountry.paymentMethods[0];
 
     setOffers((current) =>
       current.map((offer) =>
@@ -1000,7 +1381,7 @@ export default function App() {
           <View style={styles.headerActions}>
             <Pressable
               style={[styles.modeSwitch, mode === 'Provider' && styles.modeSwitchActive]}
-              onPress={() => setMode(mode === 'Customer' ? 'Provider' : 'Customer')}
+              onPress={() => updateMode(mode === 'Customer' ? 'Provider' : 'Customer')}
             >
               <Text style={[styles.modeSwitchText, mode === 'Provider' && styles.modeSwitchTextActive]}>
                 {mode}
@@ -1054,7 +1435,7 @@ export default function App() {
               jobs={jobs}
               offers={offers}
               openOfferConversation={openOfferConversation}
-              paymentMethods={paymentMethods}
+              paymentMethods={activeCountry.paymentMethods}
               providers={providers}
               refundPayment={refundPayment}
               selectedPaymentMethod={selectedPaymentMethod}
@@ -1092,11 +1473,16 @@ export default function App() {
               releasePayment={releasePayment}
               serviceRadius={serviceRadius}
               signOut={signOut}
+              countryOptions={countryOptions}
+              currencyOptions={currencyOptions}
               setInstantBooking={setInstantBooking}
-              setMode={setMode}
+              setMode={updateMode}
               setServiceRadius={setServiceRadius}
               stats={stats}
               formatMoney={formatPrice}
+              distanceUnit={activeCountry.distanceUnit}
+              updateProfileCountry={updateProfileCountry}
+              updateProfileCurrency={updateProfileCurrency}
             />
           )}
         </View>
@@ -2092,7 +2478,10 @@ function MessagesScreen({
 function ProfileScreen({
   alerts,
   completeJob,
+  countryOptions,
   currentUser,
+  currencyOptions,
+  distanceUnit,
   formatMoney,
   instantBooking,
   jobs,
@@ -2105,6 +2494,8 @@ function ProfileScreen({
   setMode,
   setServiceRadius,
   stats,
+  updateProfileCountry,
+  updateProfileCurrency,
 }) {
   const bookedJobs = jobs.filter((job) => job.status === 'Booked');
   const completedJobs = jobs.filter((job) => job.status === 'Completed');
@@ -2138,6 +2529,51 @@ function ProfileScreen({
             </Pressable>
           ))}
         </View>
+        <View style={styles.fieldGroup}>
+          <Text style={styles.inputLabel}>Marketplace country</Text>
+          <View style={styles.optionGrid}>
+            {countryOptions.map((item) => (
+              <Pressable
+                key={item.code}
+                style={[styles.optionChip, currentUser?.countryCode === item.code && styles.optionChipActive]}
+                onPress={() => updateProfileCountry(item.code)}
+              >
+                <Text
+                  style={[
+                    styles.optionChipText,
+                    currentUser?.countryCode === item.code && styles.optionChipTextActive,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+        <View style={styles.fieldGroup}>
+          <Text style={styles.inputLabel}>Preferred currency</Text>
+          <View style={styles.optionGrid}>
+            {currencyOptions.map((item) => (
+              <Pressable
+                key={item.code}
+                style={[styles.optionChip, currentUser?.currency === item.code && styles.optionChipActive]}
+                onPress={() => updateProfileCurrency(item.code)}
+              >
+                <Text
+                  style={[
+                    styles.optionChipText,
+                    currentUser?.currency === item.code && styles.optionChipTextActive,
+                  ]}
+                >
+                  {item.code}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={styles.helperText}>
+            Switching country loads that market's local demo jobs, providers and payment options.
+          </Text>
+        </View>
         <View style={styles.radiusRow}>
           <Text style={styles.preferenceLabel}>Service radius</Text>
           <View style={styles.radiusControls}>
@@ -2147,7 +2583,7 @@ function ProfileScreen({
             >
               <Text style={styles.radiusButtonText}>-</Text>
             </Pressable>
-            <Text style={styles.radiusValue}>{serviceRadius} km</Text>
+            <Text style={styles.radiusValue}>{serviceRadius} {distanceUnit}</Text>
             <Pressable
               style={styles.radiusButton}
               onPress={() => setServiceRadius((current) => Math.min(50, current + 1))}
